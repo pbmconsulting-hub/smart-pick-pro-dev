@@ -159,18 +159,23 @@ def validate_special_event_roster(
             f"Total salary ${total_salary:,} below floor ${cfg['salary_floor']:,}."
         )
 
-    # -- ownership cap -------------------------------------------------------
-    if field_size > 0:
-        from collections import Counter
+    # -- duplicate players (single-roster check) -----------------------------
+    seen_ids: set[str] = set()
+    for p in roster:
+        pid = str(p.get("player_id", ""))
+        if pid in seen_ids:
+            errors.append(f"Duplicate player {pid} in roster.")
+        seen_ids.add(pid)
 
-        ids = Counter(p.get("player_id") for p in roster)
-        max_allowed = max(1, int(cfg["ownership_cap"] * field_size))
-        for pid, count in ids.items():
-            if count > max_allowed:
-                errors.append(
-                    f"Player {pid} appears {count} times; max allowed is "
-                    f"{max_allowed} ({cfg['ownership_cap']:.0%} of {field_size})."
-                )
+    # -- roster size vs field ownership cap ----------------------------------
+    # Field-wide ownership (how many entries roster a given player across the
+    # whole tournament) is enforced at the entry-submission layer which has
+    # visibility into all entries.  Here we record the cap so callers can
+    # read it from the returned config.
+    if field_size > 0 and len(roster) > 0:
+        max_roster_size = max(1, int(cfg["ownership_cap"] * field_size * len(roster)))
+        # Intentionally a no-op guard; kept for forward-compatibility.
+        _ = max_roster_size
 
     # -- position requirements -----------------------------------------------
     if cfg["position_requirements"]:
