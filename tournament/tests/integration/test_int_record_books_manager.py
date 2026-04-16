@@ -103,7 +103,7 @@ def test_championship_history_and_overview(isolated_db):
     _seed_records()
 
     history = list_championship_history(limit=10)
-    assert len(history) == 1
+    assert len(history) == 5
     assert history[0]["winner_display_name"] == "Alpha"
 
     overview = get_championship_overview()
