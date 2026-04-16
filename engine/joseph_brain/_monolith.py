@@ -354,6 +354,13 @@ from engine.joseph_brain.fragments import (  # noqa: E402
     GAME_SEVEN_TEMPLATES,
     SERIES_CLINCH_TEMPLATES,
     FINALS_TEMPLATES,
+    # Tournament-specific fragment pools
+    TOURNAMENT_PREVIEW_POOL,
+    TOURNAMENT_OWNERSHIP_REACTION_POOL,
+    TOURNAMENT_RESULTS_POOL,
+    TOURNAMENT_BUST_POOL,
+    TOURNAMENT_SLEEPER_HIT_POOL,
+    TOURNAMENT_CHAMPIONSHIP_POOL,
 )
 
 
@@ -4865,3 +4872,347 @@ def joseph_gut_call(analysis_result: dict, narrative_tags: list = None,
             "trigger_name": "",
             "confidence_boost": 0.0,
         }
+
+
+# ═══════════════════════════════════════════════════════════════
+# TOURNAMENT COMMENTARY — Joseph as League Commissioner
+# ═══════════════════════════════════════════════════════════════
+
+
+def joseph_tournament_preview(tournament: dict, top_players: list | None = None) -> str:
+    """Generate a 3-paragraph pre-game show preview (6 hrs before lock).
+
+    Parameters
+    ----------
+    tournament : dict
+        Tournament metadata with keys like ``tournament_name``, ``court_tier``,
+        ``entry_fee``, ``lock_time``, ``max_entries``.
+    top_players : list[dict] or None
+        Optional list of top-salary players in the pool, each with ``player_name``
+        and ``salary``.
+
+    Returns
+    -------
+    str
+        A 3-paragraph commissioner preview.
+    """
+    try:
+        used_set = _used_fragments.setdefault("tournament_preview", set())
+        name = str(tournament.get("tournament_name", "tonight's tournament"))
+        tier = str(tournament.get("court_tier", "Open"))
+        fee = tournament.get("entry_fee", 0)
+        max_entries = tournament.get("max_entries", 24)
+
+        # Paragraph 1 — opening hype
+        opener = _select_fragment(TOURNAMENT_PREVIEW_POOL, used_set)
+        p1 = opener.get("text", "").replace("{hours}", "6")
+
+        # Paragraph 2 — field & tier analysis
+        fee_label = f"${fee:.0f}" if fee else "FREE"
+        tier_descriptions = {
+            "Open": "an Open Court tournament — perfect for all skill levels",
+            "Pro": "a Pro Court tournament — the competition is REAL",
+            "Elite": "an Elite Court tournament — only the SHARP survive here",
+            "Championship": "a CHAMPIONSHIP — the biggest stage in the league",
+        }
+        tier_desc = tier_descriptions.get(tier, f"a {tier} tournament")
+        p2 = (
+            f"Tonight we have {name}, {tier_desc}. "
+            f"Entry fee is {fee_label} with up to {max_entries} entries competing for the prize pool. "
+        )
+        if top_players:
+            names = [str(p.get("player_name", "Unknown")) for p in top_players[:3]]
+            if len(names) >= 3:
+                p2 += f"The headliners in the player pool are {names[0]}, {names[1]}, and {names[2]} — all priced at the TOP of the salary board."
+            elif len(names) == 2:
+                p2 += f"The headliners are {names[0]} and {names[1]} — both priced at a PREMIUM."
+            elif len(names) == 1:
+                p2 += f"The top dog in the pool is {names[0]} — priced at a PREMIUM!"
+        else:
+            p2 += "The player pool is LOADED with options tonight — salary management is going to be KEY."
+
+        # Paragraph 3 — closing advice
+        closer = _select_fragment(CLOSER_POOL, used_set)
+        p3 = (
+            "My advice as your Commissioner: study the salaries, find the VALUE, "
+            "and don't be afraid to go CONTRARIAN. The chalk doesn't win tournaments — "
+            f"CREATIVITY does. {closer.get('text', '')}"
+        )
+
+        return f"{p1}\n\n{p2}\n\n{p3}"
+
+    except Exception as exc:
+        logger.debug("joseph_tournament_preview error: %s", exc)
+        return "Commissioner Joseph M. Smith's pre-game preview is loading — stay tuned!"
+
+
+def joseph_tournament_overpriced_call(player_name: str, salary: float,
+                                      reason: str = "") -> str:
+    """Generate an Overpriced Player bust call (3 hrs before lock).
+
+    Parameters
+    ----------
+    player_name : str
+        Name of the overpriced player.
+    salary : float
+        Player's tournament salary.
+    reason : str
+        Optional reason why the player is overpriced.
+
+    Returns
+    -------
+    str
+        Commissioner's overpriced player commentary.
+    """
+    try:
+        used_set = _used_fragments.setdefault("tournament_bust", set())
+        frag = _select_fragment(TOURNAMENT_BUST_POOL, used_set)
+        text = frag.get("text", "")
+        salary_str = f"{salary:,.0f}"
+        text = text.replace("{player}", str(player_name)).replace("{salary}", salary_str)
+        if reason:
+            text += f" {reason}"
+        return text
+
+    except Exception as exc:
+        logger.debug("joseph_tournament_overpriced_call error: %s", exc)
+        return f"Commissioner's bust alert on {player_name} — overpriced tonight!"
+
+
+def joseph_tournament_sleeper_pick(player_name: str, salary: float,
+                                    reason: str = "") -> str:
+    """Generate a Sleeper Pick call (3 hrs before lock).
+
+    Parameters
+    ----------
+    player_name : str
+        Name of the sleeper player.
+    salary : float
+        Player's tournament salary.
+    reason : str
+        Optional reason why this player is a sleeper.
+
+    Returns
+    -------
+    str
+        Commissioner's sleeper pick commentary.
+    """
+    try:
+        used_set = _used_fragments.setdefault("tournament_sleeper", set())
+        frag = _select_fragment(TOURNAMENT_SLEEPER_HIT_POOL, used_set)
+        text = frag.get("text", "")
+        salary_str = f"{salary:,.0f}"
+        text = text.replace("{player}", str(player_name)).replace("{salary}", salary_str)
+        if reason:
+            text += f" {reason}"
+        return text
+
+    except Exception as exc:
+        logger.debug("joseph_tournament_sleeper_pick error: %s", exc)
+        return f"Commissioner's sleeper alert — {player_name} is UNDERPRICED tonight!"
+
+
+def joseph_tournament_ownership_reaction(tournament: dict,
+                                          ownership_data: list | None = None) -> str:
+    """Generate ownership reaction commentary (at lock).
+
+    Parameters
+    ----------
+    tournament : dict
+        Tournament metadata.
+    ownership_data : list[dict] or None
+        Optional list of ownership entries, each with ``player_name`` and
+        ``ownership_pct``.
+
+    Returns
+    -------
+    str
+        Commissioner's ownership reaction.
+    """
+    try:
+        used_set = _used_fragments.setdefault("tournament_ownership", set())
+        opener = _select_fragment(TOURNAMENT_OWNERSHIP_REACTION_POOL, used_set)
+        parts = [opener.get("text", "")]
+
+        if ownership_data:
+            # Sort by ownership descending
+            sorted_own = sorted(ownership_data, key=lambda x: float(x.get("ownership_pct", 0)), reverse=True)
+
+            # Highest owned
+            if sorted_own:
+                top = sorted_own[0]
+                top_name = str(top.get("player_name", "Unknown"))
+                top_pct = float(top.get("ownership_pct", 0))
+                parts.append(
+                    f"The most rostered player tonight is {top_name} at {top_pct:.0f}% ownership. "
+                    f"{'That is HEAVY chalk!' if top_pct >= 50 else 'Solid ownership but not OVERWHELMING.'}"
+                )
+
+            # Lowest owned
+            if len(sorted_own) >= 3:
+                low = sorted_own[-1]
+                low_name = str(low.get("player_name", "Unknown"))
+                low_pct = float(low.get("ownership_pct", 0))
+                parts.append(
+                    f"On the other end, {low_name} is at just {low_pct:.0f}% ownership. "
+                    f"{'A true CONTRARIAN play!' if low_pct <= 10 else 'Low ownership — could be a tournament winner!'}"
+                )
+        else:
+            parts.append(
+                "The ownership numbers are spread across the field — this is going to come down to "
+                "who picked the RIGHT players, not the POPULAR ones!"
+            )
+
+        closer = _select_fragment(CLOSER_POOL, used_set)
+        parts.append(closer.get("text", ""))
+
+        return " ".join(p for p in parts if p)
+
+    except Exception as exc:
+        logger.debug("joseph_tournament_ownership_reaction error: %s", exc)
+        return "Rosters are LOCKED! Commissioner Joseph M. Smith is reviewing the field!"
+
+
+def joseph_tournament_score_reaction(tournament: dict,
+                                      winner: dict | None = None,
+                                      top_entries: list | None = None) -> str:
+    """Generate score reactions and winner recap (at reveal).
+
+    Parameters
+    ----------
+    tournament : dict
+        Tournament metadata.
+    winner : dict or None
+        Winner entry with ``user_email``, ``display_name``, ``total_fp``,
+        ``payout``.
+    top_entries : list[dict] or None
+        Top 3-5 entries for recap context.
+
+    Returns
+    -------
+    str
+        Commissioner's score reaction and winner recap.
+    """
+    try:
+        used_set = _used_fragments.setdefault("tournament_results", set())
+        opener = _select_fragment(TOURNAMENT_RESULTS_POOL, used_set)
+        parts = [opener.get("text", "")]
+
+        name = str(tournament.get("tournament_name", "tonight's tournament"))
+
+        if winner:
+            w_name = str(winner.get("display_name", winner.get("user_email", "our champion")))
+            w_fp = float(winner.get("total_fp", 0))
+            w_payout = winner.get("payout", 0)
+            parts.append(
+                f"\U0001f3c6 The WINNER of {name} is {w_name} with {w_fp:.1f} fantasy points! "
+                f"{'A DOMINANT performance!' if w_fp >= 300 else 'A well-crafted roster!'}"
+            )
+            if w_payout:
+                parts.append(f"That's ${float(w_payout):,.0f} in prize money — CONGRATULATIONS from your Commissioner!")
+
+        if top_entries and len(top_entries) >= 2:
+            parts.append("Here's how the top of the leaderboard finished:")
+            for i, entry in enumerate(top_entries[:5], 1):
+                e_name = str(entry.get("display_name", entry.get("user_email", f"Entry #{i}")))
+                e_fp = float(entry.get("total_fp", 0))
+                medal = {1: "\U0001f947", 2: "\U0001f948", 3: "\U0001f949"}.get(i, f"#{i}")
+                parts.append(f"{medal} {e_name}: {e_fp:.1f} FP")
+
+        closer = _select_fragment(CLOSER_POOL, used_set)
+        parts.append(closer.get("text", ""))
+
+        return " ".join(p for p in parts if p)
+
+    except Exception as exc:
+        logger.debug("joseph_tournament_score_reaction error: %s", exc)
+        return "Tournament COMPLETE! Commissioner Joseph M. Smith congratulates all participants!"
+
+
+def joseph_tournament_championship_play_by_play(
+    phase: int,
+    total_phases: int,
+    leaderboard: list | None = None,
+    tournament: dict | None = None,
+) -> str:
+    """Generate championship play-by-play commentary (during staged reveal).
+
+    Called once per reveal phase during Championship tournaments.
+
+    Parameters
+    ----------
+    phase : int
+        Current reveal phase (1-based).
+    total_phases : int
+        Total number of reveal phases.
+    leaderboard : list[dict] or None
+        Current leaderboard snapshot, each with ``display_name`` or
+        ``user_email``, ``total_fp``, and ``rank``.
+    tournament : dict or None
+        Tournament metadata.
+
+    Returns
+    -------
+    str
+        Commissioner's play-by-play for this phase.
+    """
+    try:
+        used_set = _used_fragments.setdefault("tournament_championship", set())
+        frag = _select_fragment(TOURNAMENT_CHAMPIONSHIP_POOL, used_set)
+        text = frag.get("text", "").replace("{phase}", str(phase))
+
+        parts = [text]
+
+        is_final = phase >= total_phases
+        is_early = phase <= max(1, total_phases // 3)
+
+        if leaderboard:
+            leader = leaderboard[0] if leaderboard else {}
+            leader_name = str(leader.get("display_name", leader.get("user_email", "Unknown")))
+            leader_fp = float(leader.get("total_fp", 0))
+            parts.append(
+                f"After phase {phase} of {total_phases}, {leader_name} leads with {leader_fp:.1f} FP!"
+            )
+
+            if len(leaderboard) >= 2:
+                second = leaderboard[1]
+                second_name = str(second.get("display_name", second.get("user_email", "Unknown")))
+                second_fp = float(second.get("total_fp", 0))
+                gap = leader_fp - second_fp
+                if gap < 5:
+                    parts.append(
+                        f"{second_name} is RIGHT THERE at {second_fp:.1f} FP — "
+                        f"only {gap:.1f} points back! This is ANYONE'S championship!"
+                    )
+                elif gap < 20:
+                    parts.append(
+                        f"{second_name} sits at {second_fp:.1f} FP — "
+                        f"{gap:.1f} points back. Still within STRIKING distance!"
+                    )
+                else:
+                    parts.append(
+                        f"{second_name} is at {second_fp:.1f} FP — "
+                        f"{gap:.1f} points back. {leader_name} is running AWAY with it!"
+                    )
+
+        if is_final:
+            parts.append(
+                "This is the FINAL phase! The Championship is about to be DECIDED! "
+                "Commissioner Joseph M. Smith will now reveal the CHAMPION!"
+            )
+        elif is_early:
+            parts.append(
+                "We are EARLY in the reveal — there's still a LOT of scoring left. "
+                "Don't count ANYONE out yet!"
+            )
+        else:
+            parts.append(
+                "We are in the THICK of it! Every player's stat line matters now. "
+                "The Commissioner is watching EVERY number!"
+            )
+
+        return " ".join(p for p in parts if p)
+
+    except Exception as exc:
+        logger.debug("joseph_tournament_championship_play_by_play error: %s", exc)
+        return f"Championship phase {phase} of {total_phases} — your Commissioner is LIVE!"
