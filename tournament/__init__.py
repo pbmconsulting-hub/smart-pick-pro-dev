@@ -95,6 +95,7 @@ try:
         list_tournaments,
         list_user_entries,
         get_tournament_live_snapshot,
+        get_staged_reveal_snapshot,
         get_tournament_simulated_scores,
         load_tournament_entries,
         mark_pending_paid_entry_finalized,
@@ -204,6 +205,7 @@ except Exception:  # pragma: no cover
     list_tournaments = None  # type: ignore[assignment]
     list_user_entries = None  # type: ignore[assignment]
     get_tournament_live_snapshot = None  # type: ignore[assignment]
+    get_staged_reveal_snapshot = None  # type: ignore[assignment]
     get_tournament_simulated_scores = None  # type: ignore[assignment]
     load_tournament_entries = None  # type: ignore[assignment]
     mark_pending_paid_entry_finalized = None  # type: ignore[assignment]
@@ -385,6 +387,7 @@ __all__ = [
     "list_user_notifications",
     "list_user_entries",
     "get_tournament_live_snapshot",
+    "get_staged_reveal_snapshot",
     "get_tournament_simulated_scores",
     "list_tournaments",
     "log_event",

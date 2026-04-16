@@ -31,8 +31,13 @@ TOURNAMENT_CONFIG = {
     "entry_fee_open_court": 0.0,  # Free
     "entry_fee_pro_court": 5.0,
     "entry_fee_elite_court": 25.0,
+    "entry_fee_championship_night": 75.0,
+    "entry_fee_grand_championship": 100.0,
     "max_entries_per_user": None,  # No limit
     "lock_time_offset_minutes": 30,  # Lock 30 min before game
+    "championship_field_size": 32,
+    "championship_min_entries": 16,
+    "championship_reveal_mode": "staged",  # 30-minute phased reveal
 }
 
 # Roster Configuration
@@ -103,9 +108,27 @@ PREMIUM_TIERS = {
     "legend_pass": {
         "legend_access": True,
         "legend_slots": 1,
+        "legend_count": 8,  # All 8 monthly legends
         "tournaments_per_month": None,
         "price_monthly": 4.99,
         "requires": "premium",  # Add-on to premium
+    },
+}
+
+# Championship Night Configuration
+CHAMPIONSHIP_CONFIG = {
+    "entry_fee": 75.0,
+    "field_size": 32,
+    "min_entries": 16,
+    "reveal_mode": "staged",
+    "qualification_method": "lp_snapshot",  # Monthly LP snapshot
+    "payout_template": [500, 325, 275, 220, 180, 150, 145, 125],
+    "lp_multiplier": {
+        1: 250,   # 1st place
+        2: 175,   # 2nd place
+        3: 125,   # 3rd place
+        4: 75,    # 4th place
+        5: 50,    # 5th place
     },
 }
 

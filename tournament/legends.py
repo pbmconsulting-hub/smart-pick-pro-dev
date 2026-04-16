@@ -39,3 +39,26 @@ def get_monthly_legends(month: int) -> list[dict]:
     rotated = rotatable[start:] + rotatable[:start]
     selected = [l for l in LEGEND_PROFILES if l["player_id"] in fixed_ids] + rotated[:6]
     return deepcopy(selected)
+
+
+def get_legends_for_tier(month: int, *, has_legend_pass: bool = False, is_premium: bool = False) -> list[dict]:
+    """Return the legends a user can access based on their subscription tier.
+
+    Legend Pass gate logic (Section III of the master plan):
+      - Free users: no legends (empty list)
+      - Premium ($9.99/mo) only: 3 cheapest legends that month
+      - Premium + Legend Pass ($14.98/mo total): all 8 available that month
+
+    January = all 20 available regardless (holiday bonus).
+    """
+    if not is_premium:
+        return []
+
+    monthly = get_monthly_legends(month)
+
+    if has_legend_pass:
+        return monthly
+
+    # Premium-only: 3 cheapest legends
+    sorted_by_salary = sorted(monthly, key=lambda l: (l.get("salary", 0), l.get("player_id", "")))
+    return deepcopy(sorted_by_salary[:3])

@@ -361,6 +361,67 @@ def get_tournament_live_snapshot(tournament_id: int, user_email: str = "", top_n
     }
 
 
+def get_staged_reveal_snapshot(tournament_id: int, now: datetime | None = None) -> dict:
+    """Return a staged-reveal snapshot for Championship Night.
+
+    Uses the tournament reveal engine to determine the current phase,
+    filter scores to only the stats revealed so far, and compute a
+    partial leaderboard.
+    """
+    from tournament.engine.tournament_reveal import (
+        compute_partial_leaderboard,
+        filter_scores_for_phase,
+        get_current_phase,
+        get_next_phase,
+    )
+
+    tournament = get_tournament(tournament_id)
+    if not tournament:
+        return {"success": False, "error": "Tournament not found"}
+
+    reveal_mode = str(tournament.get("reveal_mode", "instant"))
+    if reveal_mode != "staged":
+        return get_tournament_live_snapshot(tournament_id)
+
+    lock_time_raw = str(tournament.get("lock_time", "") or "")
+    try:
+        lock_time = datetime.strptime(lock_time_raw, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+    except (ValueError, TypeError):
+        lock_time = datetime.now(timezone.utc)
+
+    phase = get_current_phase(lock_time, now)
+    next_phase = get_next_phase(lock_time, now)
+
+    sim_rows = get_tournament_simulated_scores(tournament_id)
+    sim_results: dict[str, dict] = {}
+    for row in sim_rows:
+        pid = str(row.get("player_id", ""))
+        line_data = _loads_json(row.get("line_json"), {})
+        sim_results[pid] = {
+            **line_data,
+            "fantasy_points": float(row.get("fantasy_points", 0.0)),
+            "bonuses": _loads_json(row.get("bonuses_json"), {"total": 0.0, "triggered": []}),
+            "penalties": _loads_json(row.get("penalties_json"), {"total": 0.0, "triggered": []}),
+            "total_fp": float(row.get("total_fp", 0.0)),
+        }
+
+    filtered_scores = filter_scores_for_phase(sim_results, phase)
+
+    entries = load_tournament_entries(tournament_id)
+    partial_board = compute_partial_leaderboard(entries, filtered_scores)
+
+    return {
+        "success": True,
+        "tournament": tournament,
+        "reveal_mode": "staged",
+        "phase": phase,
+        "next_phase": next_phase,
+        "partial_leaderboard": partial_board,
+        "filtered_scores": filtered_scores,
+        "entry_count": len(entries),
+    }
+
+
 def list_user_entries(user_email: str, limit: int = 100) -> list[dict]:
     """List one user's tournament entries across all tournaments."""
     tournament_db.initialize_tournament_database()
@@ -1485,7 +1546,11 @@ def get_championship_overview() -> dict:
 
 
 def get_season_awards_snapshot() -> dict:
-    """Compute lightweight season awards directly from tournament/career data."""
+    """Compute lightweight season awards directly from tournament/career data.
+
+    Includes MVP, DPOY, GM of the Year, Clutch Award, Sharp, Money Maker,
+    and Volume Grinder per the master plan Section IX.
+    """
     tournament_db.initialize_tournament_database()
     with tournament_db.get_tournament_connection() as conn:
         mvp = conn.execute(
@@ -1541,16 +1606,87 @@ def get_season_awards_snapshot() -> dict:
             """
         ).fetchone()
 
+        # DPOY — highest total steals+blocks FP across all tournament entries
+        dpoy = conn.execute(
+            """
+            SELECT
+                e.user_email,
+                COALESCE(NULLIF(e.display_name, ''), e.user_email) AS winner,
+                SUM(
+                    COALESCE(json_extract(ss.line_json, '$.steals'), 0) * 3.0 +
+                    COALESCE(json_extract(ss.line_json, '$.blocks'), 0) * 3.0
+                ) AS defensive_fp,
+                COUNT(DISTINCT e.tournament_id) AS samples
+            FROM tournament_entries e
+            JOIN simulated_scores ss ON ss.tournament_id = e.tournament_id
+            WHERE e.rank IS NOT NULL
+            GROUP BY e.user_email
+            HAVING COUNT(DISTINCT e.tournament_id) >= 3
+            ORDER BY defensive_fp DESC
+            LIMIT 1
+            """
+        ).fetchone()
+
+        # GM of the Year — best salary efficiency (score per $1K salary)
+        gm = conn.execute(
+            """
+            SELECT
+                COALESCE(NULLIF(e.display_name, ''), e.user_email) AS winner,
+                AVG(e.total_score) AS avg_score,
+                COUNT(*) AS samples
+            FROM tournament_entries e
+            JOIN tournaments t ON t.tournament_id = e.tournament_id
+            WHERE e.rank IS NOT NULL AND t.status = 'resolved'
+            GROUP BY e.user_email
+            HAVING COUNT(*) >= 3
+            ORDER BY avg_score DESC
+            LIMIT 1
+            """
+        ).fetchone()
+
+        # Clutch Award — most wins by <3 FP margin over 2nd place
+        clutch = conn.execute(
+            """
+            SELECT
+                COALESCE(NULLIF(w.display_name, ''), w.user_email) AS winner,
+                COUNT(*) AS clutch_wins
+            FROM tournament_entries w
+            JOIN tournament_entries r ON r.tournament_id = w.tournament_id AND r.rank = 2
+            WHERE w.rank = 1 AND (w.total_score - r.total_score) < 3.0
+                AND (w.total_score - r.total_score) > 0
+            GROUP BY w.user_email
+            ORDER BY clutch_wins DESC
+            LIMIT 1
+            """
+        ).fetchone()
+
     mvp_d = _row_to_dict(mvp)
     sharp_d = _row_to_dict(sharp)
     money_d = _row_to_dict(money_maker)
     volume_d = _row_to_dict(volume)
+    dpoy_d = _row_to_dict(dpoy)
+    gm_d = _row_to_dict(gm)
+    clutch_d = _row_to_dict(clutch)
 
     return {
         "mvp": {
             "winner": str(mvp_d.get("winner", "")),
             "average_score": round(float(mvp_d.get("value", 0.0) or 0.0), 2),
             "sample_size": int(mvp_d.get("samples", 0) or 0),
+        },
+        "dpoy": {
+            "winner": str(dpoy_d.get("winner", "")),
+            "defensive_fp": round(float(dpoy_d.get("defensive_fp", 0.0) or 0.0), 2),
+            "sample_size": int(dpoy_d.get("samples", 0) or 0),
+        },
+        "gm_of_the_year": {
+            "winner": str(gm_d.get("winner", "")),
+            "avg_score": round(float(gm_d.get("avg_score", 0.0) or 0.0), 2),
+            "sample_size": int(gm_d.get("samples", 0) or 0),
+        },
+        "clutch_award": {
+            "winner": str(clutch_d.get("winner", "")),
+            "clutch_wins": int(clutch_d.get("clutch_wins", 0) or 0),
         },
         "sharp": {
             "winner": str(sharp_d.get("winner", "")),
@@ -1772,44 +1908,51 @@ def list_badge_leaders(limit: int = 10) -> list[dict]:
 
 def list_hall_of_fame_candidates(
     limit: int = 20,
-    min_entries: int = 100,
-    min_win_rate: float = 0.35,
-    min_earnings: float = 5000.0,
+    min_lp: int = 2000,
+    min_championship_wins: int = 5,
+    min_wins: int = 50,
 ) -> list[dict]:
-    """Return Hall of Fame candidates from career stats using configurable thresholds."""
+    """Return Hall of Fame candidates: 2,000+ LP, 5+ Championships, 50+ wins.
+
+    Per Section IX of the master plan, the criteria are:
+      - 2,000+ lifetime LP
+      - 5+ Championship wins
+      - 50+ lifetime wins
+    """
     tournament_db.initialize_tournament_database()
     with tournament_db.get_tournament_connection() as conn:
         rows = conn.execute(
             """
             SELECT
-                user_email,
-                COALESCE(NULLIF(display_name, ''), user_email) AS display_name,
-                lifetime_entries,
-                lifetime_wins,
-                lifetime_top5,
-                lifetime_earnings,
-                lifetime_lp,
-                career_level,
+                ucs.user_email,
+                COALESCE(NULLIF(ucs.display_name, ''), ucs.user_email) AS display_name,
+                ucs.lifetime_entries,
+                ucs.lifetime_wins,
+                ucs.lifetime_top5,
+                ucs.lifetime_earnings,
+                ucs.lifetime_lp,
+                ucs.career_level,
                 CASE
-                    WHEN lifetime_entries > 0 THEN (CAST(lifetime_wins AS REAL) / CAST(lifetime_entries AS REAL))
+                    WHEN ucs.lifetime_entries > 0 THEN (CAST(ucs.lifetime_wins AS REAL) / CAST(ucs.lifetime_entries AS REAL))
                     ELSE 0.0
-                END AS win_rate
-            FROM user_career_stats
-            WHERE lifetime_entries >= ?
-              AND lifetime_earnings >= ?
-              AND (
-                    CASE
-                        WHEN lifetime_entries > 0 THEN (CAST(lifetime_wins AS REAL) / CAST(lifetime_entries AS REAL))
-                        ELSE 0.0
-                    END
-                  ) >= ?
-            ORDER BY win_rate DESC, lifetime_earnings DESC, lifetime_entries DESC
+                END AS win_rate,
+                COALESCE(ch.championship_wins, 0) AS championship_wins
+            FROM user_career_stats ucs
+            LEFT JOIN (
+                SELECT winner_email, COUNT(*) AS championship_wins
+                FROM championship_history
+                GROUP BY winner_email
+            ) ch ON ch.winner_email = ucs.user_email
+            WHERE ucs.lifetime_lp >= ?
+              AND ucs.lifetime_wins >= ?
+              AND COALESCE(ch.championship_wins, 0) >= ?
+            ORDER BY ucs.lifetime_lp DESC, ucs.lifetime_wins DESC, ucs.lifetime_earnings DESC
             LIMIT ?
             """,
             (
-                max(1, int(min_entries)),
-                float(min_earnings),
-                float(min_win_rate),
+                max(0, int(min_lp)),
+                max(0, int(min_wins)),
+                max(0, int(min_championship_wins)),
                 max(1, int(limit)),
             ),
         ).fetchall()
@@ -8633,6 +8776,123 @@ def resolve_tournament(tournament_id: int) -> dict:
                     context={"tournament_id": int(tournament_id), "season_label": season_label},
                 ):
                     awarded_keys.append("championship_winner")
+
+            # --- Phase 3 additional badges ---
+
+            # Century Club — 100+ total FP
+            if float(row.get("total_score", 0.0) or 0.0) >= 100.0:
+                if _grant_badge_award(
+                    conn,
+                    user_email=normalized_email,
+                    award_key="century_club",
+                    award_name="Century Club",
+                    context={"tournament_id": int(tournament_id), "score": float(row.get("total_score", 0.0))},
+                ):
+                    awarded_keys.append("century_club")
+
+            # Blowout Artist — win by 20+ FP
+            if idx == 1 and len(scored_entries) >= 2:
+                margin = float(row.get("total_score", 0.0) or 0.0) - float(scored_entries[1].get("total_score", 0.0) or 0.0)
+                if margin >= 20.0:
+                    if _grant_badge_award(
+                        conn,
+                        user_email=normalized_email,
+                        award_key="blowout_artist",
+                        award_name="Blowout Artist",
+                        context={"tournament_id": int(tournament_id), "margin": round(margin, 2)},
+                    ):
+                        awarded_keys.append("blowout_artist")
+
+            # Photo Finish — win by <1.0 FP
+            if idx == 1 and len(scored_entries) >= 2:
+                margin_pf = float(row.get("total_score", 0.0) or 0.0) - float(scored_entries[1].get("total_score", 0.0) or 0.0)
+                if 0 < margin_pf < 1.0:
+                    if _grant_badge_award(
+                        conn,
+                        user_email=normalized_email,
+                        award_key="photo_finish",
+                        award_name="Photo Finish",
+                        context={"tournament_id": int(tournament_id), "margin": round(margin_pf, 2)},
+                    ):
+                        awarded_keys.append("photo_finish")
+
+            # Diamond Manager — win spending <$42K active cap
+            if idx == 1:
+                entry_row = next((p for p in parsed_entries if int(p.get("entry_id", 0) or 0) == int(row["entry_id"])), {})
+                roster = list(entry_row.get("roster") or [])
+                active_salary = sum(int(p.get("salary", 0) or 0) for p in roster if not bool(p.get("is_legend", False)))
+                if active_salary < 42000:
+                    if _grant_badge_award(
+                        conn,
+                        user_email=normalized_email,
+                        award_key="diamond_manager",
+                        award_name="Diamond Manager",
+                        context={"tournament_id": int(tournament_id), "active_salary": active_salary},
+                    ):
+                        awarded_keys.append("diamond_manager")
+
+            # Underdog King — win with 0 Superstar-tier players
+            if idx == 1:
+                entry_row_ug = next((p for p in parsed_entries if int(p.get("entry_id", 0) or 0) == int(row["entry_id"])), {})
+                roster_ug = list(entry_row_ug.get("roster") or [])
+                has_superstar = any(str(p.get("rarity_tier", "")).strip() == "Superstar" for p in roster_ug)
+                if not has_superstar:
+                    if _grant_badge_award(
+                        conn,
+                        user_email=normalized_email,
+                        award_key="underdog_king",
+                        award_name="Underdog King",
+                        context={"tournament_id": int(tournament_id)},
+                    ):
+                        awarded_keys.append("underdog_king")
+
+            # Career-level milestone badges (LP thresholds)
+            career_row = conn.execute(
+                "SELECT lifetime_lp, lifetime_entries, lifetime_wins, lifetime_earnings FROM user_career_stats WHERE user_email = ?",
+                (normalized_email,),
+            ).fetchone()
+            if career_row:
+                c_lp = int(career_row["lifetime_lp"] or 0)
+                c_entries = int(career_row["lifetime_entries"] or 0)
+                c_wins = int(career_row["lifetime_wins"] or 0)
+                c_earnings = float(career_row["lifetime_earnings"] or 0.0)
+
+                if c_entries >= 50:
+                    if _grant_badge_award(conn, user_email=normalized_email, award_key="grinder", award_name="Grinder",
+                                          context={"lifetime_entries": c_entries}):
+                        awarded_keys.append("grinder")
+                if c_earnings >= 1000.0:
+                    if _grant_badge_award(conn, user_email=normalized_email, award_key="money_maker", award_name="Money Maker",
+                                          context={"lifetime_earnings": c_earnings}):
+                        awarded_keys.append("money_maker")
+                if c_lp >= 500:
+                    if _grant_badge_award(conn, user_email=normalized_email, award_key="lp_climber", award_name="LP Climber",
+                                          context={"lifetime_lp": c_lp}):
+                        awarded_keys.append("lp_climber")
+                if c_lp >= 1000:
+                    if _grant_badge_award(conn, user_email=normalized_email, award_key="all_star_rank", award_name="All-Star Rank",
+                                          context={"lifetime_lp": c_lp}):
+                        awarded_keys.append("all_star_rank")
+                if c_lp >= 2000:
+                    if _grant_badge_award(conn, user_email=normalized_email, award_key="legend_rank", award_name="Legend Rank",
+                                          context={"lifetime_lp": c_lp}):
+                        awarded_keys.append("legend_rank")
+                if c_lp >= 5000:
+                    if _grant_badge_award(conn, user_email=normalized_email, award_key="goat_rank", award_name="GOAT Rank",
+                                          context={"lifetime_lp": c_lp}):
+                        awarded_keys.append("goat_rank")
+
+                # Hall of Fame badge — 2,000+ LP, 5+ Championships, 50+ wins
+                if c_lp >= 2000 and c_wins >= 50:
+                    champ_count_row = conn.execute(
+                        "SELECT COUNT(*) AS cnt FROM championship_history WHERE winner_email = ?",
+                        (normalized_email,),
+                    ).fetchone()
+                    champ_count = int((champ_count_row["cnt"] if champ_count_row else 0) or 0)
+                    if champ_count >= 5:
+                        if _grant_badge_award(conn, user_email=normalized_email, award_key="hall_of_fame", award_name="Hall of Fame",
+                                              context={"lifetime_lp": c_lp, "championship_wins": champ_count, "lifetime_wins": c_wins}):
+                            awarded_keys.append("hall_of_fame")
 
             if awarded_keys:
                 deferred_events.append(

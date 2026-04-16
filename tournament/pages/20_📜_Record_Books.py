@@ -111,6 +111,34 @@ st.markdown(
         padding: 8px 0;
         font-size: 14px;
     }
+    .championship-banner {
+        border: 2px solid #ffd700;
+        border-radius: 8px;
+        padding: 16px;
+        background: linear-gradient(135deg, #1a1811 0%, #2a2518 100%);
+        margin-bottom: 12px;
+        box-shadow: 0 0 12px rgba(255, 215, 0, 0.2);
+    }
+    .championship-banner h3 {
+        color: #ffd700;
+        margin: 0 0 8px 0;
+    }
+    .championship-banner .banner-detail {
+        display: flex;
+        justify-content: space-between;
+        padding: 4px 0;
+        font-size: 13px;
+    }
+    .career-level-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: bold;
+        background: #ffd700;
+        color: #000;
+        margin-left: 8px;
+    }
 </style>
 """,
     unsafe_allow_html=True,
@@ -176,14 +204,30 @@ with tab_champs:
         score = float(row.get("winning_score", 0.0) or 0.0)
         prize = float(row.get("payout_amount", 0.0) or 0.0)
         created_at = str(row.get("created_at", ""))
+        roster = row.get("roster") or []
+        roster_names = ", ".join(str(p.get("player_name", p.get("name", "?"))) for p in roster[:5])
+        if len(roster) > 5:
+            roster_names += f" +{len(roster) - 5} more"
         st.markdown(
             f"""
-            <div class="record-row">
-                <div class="record-rank">{season}</div>
-                <div>{champ}</div>
-                <div class="record-value">{score:,.2f}</div>
-                <div style="color: #ffd700; font-weight: bold;">${prize:,.2f}</div>
-                <div style="color: #999;">{created_at}</div>
+            <div class="championship-banner">
+                <h3>🏆 {season}</h3>
+                <div class="banner-detail">
+                    <span style="color: #ffd700; font-weight: bold;">👑 {champ}</span>
+                    <span style="color: #34c759; font-weight: bold;">{score:,.2f} FP</span>
+                </div>
+                <div class="banner-detail">
+                    <span style="color: #999;">Prize</span>
+                    <span style="color: #ffd700; font-weight: bold;">${prize:,.2f}</span>
+                </div>
+                <div class="banner-detail">
+                    <span style="color: #999;">Roster</span>
+                    <span style="color: #ccc; font-size: 12px;">{roster_names}</span>
+                </div>
+                <div class="banner-detail">
+                    <span style="color: #999;">Date</span>
+                    <span style="color: #999;">{created_at}</span>
+                </div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -194,6 +238,9 @@ with tab_awards:
 
     awards = data.get("awards") or {}
     mvp = awards.get("mvp") or {}
+    dpoy = awards.get("dpoy") or {}
+    gm = awards.get("gm_of_the_year") or {}
+    clutch_aw = awards.get("clutch_award") or {}
     sharp = awards.get("sharp") or {}
     money = awards.get("money_maker") or {}
     volume = awards.get("volume_grinder") or {}
@@ -212,6 +259,18 @@ with tab_awards:
             unsafe_allow_html=True,
         )
 
+        st.markdown("### 🛡️ DPOY")
+        st.markdown(
+            f"""
+            <div class="award-card">
+                <div class="award-name">Defensive Player of the Year</div>
+                <div style="color: #999; font-size: 12px; margin-top: 8px;">Highest steals+blocks fantasy points across tournaments</div>
+                <div class="award-winner">{dpoy.get('winner') or 'TBD'} ({float(dpoy.get('defensive_fp', 0.0) or 0.0):.2f} defensive FP)</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
         st.markdown("### 💰 Money Maker")
         st.markdown(
             f"""
@@ -225,6 +284,30 @@ with tab_awards:
         )
 
     with c2:
+        st.markdown("### 📋 GM of the Year")
+        st.markdown(
+            f"""
+            <div class="award-card">
+                <div class="award-name">Best Roster Builder</div>
+                <div style="color: #999; font-size: 12px; margin-top: 8px;">Best salary efficiency (avg score, 3+ entries)</div>
+                <div class="award-winner">{gm.get('winner') or 'TBD'} ({float(gm.get('avg_score', 0.0) or 0.0):.2f} avg)</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        st.markdown("### 🔥 Clutch Award")
+        st.markdown(
+            f"""
+            <div class="award-card">
+                <div class="award-name">Clutch Performer</div>
+                <div style="color: #999; font-size: 12px; margin-top: 8px;">Most wins by less than 3 FP margin</div>
+                <div class="award-winner">{clutch_aw.get('winner') or 'TBD'} ({int(clutch_aw.get('clutch_wins', 0) or 0)} clutch wins)</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
         st.markdown("### 🎯 Sharp")
         st.markdown(
             f"""
@@ -365,35 +448,40 @@ with tab_hof:
     st.markdown("## 🏛️ Hall of Fame")
     st.markdown(
         """
-        Inducted after meeting all thresholds:
-        100+ entries, 35%+ win rate, and $5,000+ lifetime tournament earnings.
+        Inducted after meeting **all** thresholds:
+        **2,000+ LP** · **5+ Championship wins** · **50+ lifetime wins**
         """
     )
 
     hof_rows = data.get("hof") or []
     if not hof_rows:
-        st.info("No Hall of Fame members yet. Players are auto-selected from user career stats when thresholds are met.")
+        st.info("No Hall of Fame members yet. Players are inducted when they reach 2,000+ LP, 5+ Championships, and 50+ wins.")
 
     for row in hof_rows:
+        champ_wins = int(row.get("championship_wins", 0) or 0)
         st.markdown(
             f"""
             <div class="hof-card">
-                <h3 style="margin: 0; color: #ffd700;">⭐ {row.get('display_name', row.get('user_email', '-'))}</h3>
+                <h3 style="margin: 0; color: #ffd700;">🏛️ {row.get('display_name', row.get('user_email', '-'))}</h3>
                 <div class="hof-stat">
-                    <span>Tournaments</span>
-                    <span style="color: #34c759; font-weight: bold;">{int(row.get('lifetime_entries', 0) or 0):,}</span>
+                    <span>Lifetime Wins</span>
+                    <span style="color: #34c759; font-weight: bold;">{int(row.get('lifetime_wins', 0) or 0):,}</span>
                 </div>
                 <div class="hof-stat">
-                    <span>Win Rate</span>
-                    <span style="color: #34c759; font-weight: bold;">{float(row.get('win_rate', 0.0) or 0.0) * 100:.1f}%</span>
+                    <span>Championship Wins</span>
+                    <span style="color: #ffd700; font-weight: bold;">{champ_wins:,} 🏆</span>
+                </div>
+                <div class="hof-stat">
+                    <span>Career LP</span>
+                    <span style="color: #34c759; font-weight: bold;">{int(row.get('lifetime_lp', 0) or 0):,}</span>
                 </div>
                 <div class="hof-stat">
                     <span>Total Winnings</span>
                     <span style="color: #ffd700; font-weight: bold;">${float(row.get('lifetime_earnings', 0.0) or 0.0):,.2f}</span>
                 </div>
                 <div class="hof-stat">
-                    <span>Career LP</span>
-                    <span style="color: #34c759; font-weight: bold;">{int(row.get('lifetime_lp', 0) or 0):,}</span>
+                    <span>Win Rate</span>
+                    <span style="color: #34c759; font-weight: bold;">{float(row.get('win_rate', 0.0) or 0.0) * 100:.1f}%</span>
                 </div>
             </div>
             """,
