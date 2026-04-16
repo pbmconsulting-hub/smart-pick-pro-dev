@@ -192,6 +192,42 @@ CREATE TABLE IF NOT EXISTS pending_paid_entries (
 );
 """
 
+CREATE_USER_ACCOUNTS_SQL = """
+CREATE TABLE IF NOT EXISTS user_accounts (
+    user_email TEXT PRIMARY KEY,
+    display_name TEXT NOT NULL UNIQUE,
+    email_verified INTEGER DEFAULT 0,
+    verification_token_hash TEXT,
+    verification_expires_at TEXT,
+    verified_at TEXT,
+    referred_by_code TEXT,
+    referral_credit_balance REAL DEFAULT 0.0,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+);
+"""
+
+CREATE_REFERRAL_CODES_SQL = """
+CREATE TABLE IF NOT EXISTS referral_codes (
+    referral_code TEXT PRIMARY KEY,
+    owner_email TEXT NOT NULL UNIQUE,
+    created_at TEXT DEFAULT (datetime('now'))
+);
+"""
+
+CREATE_REFERRAL_RELATIONSHIPS_SQL = """
+CREATE TABLE IF NOT EXISTS referral_relationships (
+    referral_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    referral_code TEXT NOT NULL,
+    referrer_email TEXT NOT NULL,
+    referred_email TEXT NOT NULL UNIQUE,
+    first_paid_entry_id INTEGER,
+    credited_amount REAL DEFAULT 0.0,
+    credited_at TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+);
+"""
+
 TOURNAMENT_INDEXES = (
     "CREATE INDEX IF NOT EXISTS idx_tournaments_status_lock ON tournaments(status, lock_time)",
     "CREATE INDEX IF NOT EXISTS idx_entries_tid ON tournament_entries(tournament_id)",
@@ -205,6 +241,10 @@ TOURNAMENT_INDEXES = (
     "CREATE INDEX IF NOT EXISTS idx_pending_tid_status ON pending_paid_entries(tournament_id, status, updated_at)",
     "CREATE INDEX IF NOT EXISTS idx_pending_email_status ON pending_paid_entries(user_email, status, updated_at)",
     "CREATE INDEX IF NOT EXISTS idx_sub_status_active ON user_subscription_status(premium_active, legend_pass_active, updated_at)",
+    "CREATE INDEX IF NOT EXISTS idx_accounts_display_name ON user_accounts(display_name)",
+    "CREATE INDEX IF NOT EXISTS idx_referral_owner ON referral_codes(owner_email)",
+    "CREATE INDEX IF NOT EXISTS idx_ref_rel_referrer_time ON referral_relationships(referrer_email, created_at)",
+    "CREATE INDEX IF NOT EXISTS idx_ref_rel_referred ON referral_relationships(referred_email)",
 )
 
 
@@ -226,6 +266,9 @@ def initialize_tournament_database() -> bool:
             conn.execute(CREATE_STRIPE_CHECKOUT_SESSIONS_SQL)
             conn.execute(CREATE_PENDING_PAID_ENTRIES_SQL)
             conn.execute(CREATE_USER_SUBSCRIPTION_STATUS_SQL)
+            conn.execute(CREATE_USER_ACCOUNTS_SQL)
+            conn.execute(CREATE_REFERRAL_CODES_SQL)
+            conn.execute(CREATE_REFERRAL_RELATIONSHIPS_SQL)
 
             # Backward-compatible migrations for existing standalone DB files.
             try:
@@ -274,6 +317,10 @@ def initialize_tournament_database() -> bool:
                 pass
             try:
                 conn.execute("ALTER TABLE user_career_stats ADD COLUMN stripe_connect_last_synced_at TEXT")
+            except sqlite3.OperationalError:
+                pass
+            try:
+                conn.execute("ALTER TABLE user_accounts ADD COLUMN referral_credit_balance REAL DEFAULT 0.0")
             except sqlite3.OperationalError:
                 pass
 

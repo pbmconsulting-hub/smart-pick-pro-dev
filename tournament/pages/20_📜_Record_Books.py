@@ -23,6 +23,7 @@ from manager import (  # noqa: E402
     list_championship_history,
     list_hall_of_fame_candidates,
 )
+from legal import get_dfs_disclaimer_markdown
 
 
 @st.cache_data(ttl=30)
@@ -413,3 +414,6 @@ with col2:
 with col3:
     if st.button("🏟️ Back to Lobby →", use_container_width=True):
         st.switch_page("pages/16_🏟️_Tournament_Lobby.py")
+
+st.markdown("---")
+st.markdown(get_dfs_disclaimer_markdown())

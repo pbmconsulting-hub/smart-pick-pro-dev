@@ -26,6 +26,7 @@ from config import TOURNAMENT_CONFIG, PREMIUM_TIERS
 from utils.tournament_manager import TournamentManager
 from utils.tournament_gate import TournamentGate, TournamentAccess
 from data.legends import get_available_legends_for_month
+from legal import get_dfs_disclaimer_markdown
 
 
 # ============================================================================
@@ -432,6 +433,8 @@ with tab_joseph:
 # FOOTER
 # ============================================================================
 
+st.markdown("---")
+st.markdown(get_dfs_disclaimer_markdown())
 st.markdown("---")
 st.markdown("""
 <div style="text-align: center; font-size: 12px; color: #999;">

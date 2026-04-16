@@ -15,6 +15,7 @@ TOURNAMENT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(TOURNAMENT_ROOT))
 
 from manager import get_tournament_live_snapshot, list_tournaments
+from legal import get_dfs_disclaimer_markdown
 
 
 @st.cache_data(ttl=20)
@@ -254,3 +255,6 @@ with col1:
 with col2:
     if st.button("📊 View My Profile", use_container_width=True):
         st.switch_page("pages/19_🏆_My_Profile.py")
+
+st.markdown("---")
+st.markdown(get_dfs_disclaimer_markdown())

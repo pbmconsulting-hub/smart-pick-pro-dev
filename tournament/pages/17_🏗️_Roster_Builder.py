@@ -7,8 +7,14 @@ the root pages directory so both entry points stay in sync.
 from __future__ import annotations
 
 from pathlib import Path
+import sys
 
 import streamlit as st
+
+TOURNAMENT_ROOT = Path(__file__).parent.parent
+sys.path.insert(0, str(TOURNAMENT_ROOT))
+
+from legal import get_dfs_disclaimer_markdown
 
 
 def _load_shared_page() -> Path:
@@ -24,3 +30,6 @@ try:
     exec(shared_page.read_text(encoding="utf-8"), {})
 except Exception as exc:
     st.error(f"Unable to load roster builder: {exc}")
+
+st.markdown("---")
+st.markdown(get_dfs_disclaimer_markdown())

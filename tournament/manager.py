@@ -16,7 +16,12 @@ from typing import Any
 import tournament.database as tournament_db
 from tournament.events import list_events, log_event
 from tournament.gate import evaluate_tournament_access
-from tournament.notifications import send_notification
+from tournament.notifications import (
+    notify_badges_earned,
+    notify_level_up,
+    notify_results_posted,
+    send_notification,
+)
 from tournament.payout import compute_scaled_payouts
 from tournament.scoring import score_player_total
 from tournament.simulation import generate_tournament_seed, simulate_player_full_line, simulate_tournament_environment
@@ -2040,13 +2045,33 @@ def submit_paid_entry_after_checkout(
 
     # We persist the checkout session ID in stripe_payment_intent_id for now.
     # This keeps a durable payment reference in the isolated subsystem.
-    return submit_entry(
+    ok, message, entry_id = submit_entry(
         tournament_id=tournament_id,
         user_email=user_email,
         display_name=display_name,
         roster=roster,
         stripe_payment_intent_id=session_id,
     )
+    if not ok or not entry_id:
+        return ok, message, entry_id
+
+    try:
+        from tournament.referrals import apply_first_paid_entry_referral_credit
+
+        referral_result = apply_first_paid_entry_referral_credit(
+            referred_user_email=email,
+            paid_entry_id=int(entry_id),
+            credit_amount=5.0,
+            monthly_cap=50.0,
+        )
+        if referral_result.get("applied", False):
+            amount = float(referral_result.get("credited_amount", 0.0) or 0.0)
+            referrer = str(referral_result.get("referrer_email", "") or "")
+            message = f"{message} | referral credit applied: ${amount:.2f} to {referrer}"
+    except Exception:
+        pass
+
+    return ok, message, entry_id
 
 
 def save_pending_paid_entry(
@@ -8401,12 +8426,14 @@ def resolve_tournament(tournament_id: int) -> dict:
 
         participant_emails = sorted({str(r.get("user_email", "")).strip().lower() for r in parsed_entries if str(r.get("user_email", "")).strip()})
         prior_wins: dict[str, int] = {email: 0 for email in participant_emails}
+        prior_levels: dict[str, int] = {email: 1 for email in participant_emails}
         for email in participant_emails:
             row = conn.execute(
-                "SELECT lifetime_wins FROM user_career_stats WHERE user_email = ?",
+                "SELECT lifetime_wins, career_level FROM user_career_stats WHERE user_email = ?",
                 (email,),
             ).fetchone()
             prior_wins[email] = int((row["lifetime_wins"] if row else 0) or 0)
+            prior_levels[email] = int((row["career_level"] if row else 1) or 1)
 
         sim_results: dict[str, dict] = {}
         for pid in sorted(unique_player_ids):
@@ -8548,6 +8575,25 @@ def resolve_tournament(tournament_id: int) -> dict:
                 ),
             )
 
+            stats_after = conn.execute(
+                "SELECT career_level FROM user_career_stats WHERE user_email = ?",
+                (normalized_email,),
+            ).fetchone()
+            current_level = int((stats_after["career_level"] if stats_after else prior_levels.get(normalized_email, 1)) or 1)
+            previous_level = int(prior_levels.get(normalized_email, 1) or 1)
+            if current_level > previous_level:
+                deferred_notifications.append(
+                    {
+                        "notification_key": "level_up",
+                        "message": f"Level up! You reached Level {current_level}",
+                        "tournament_id": int(tournament_id),
+                        "entry_id": int(row["entry_id"]),
+                        "user_email": normalized_email,
+                        "metadata": {"new_level": current_level, "previous_level": previous_level},
+                    }
+                )
+                prior_levels[normalized_email] = current_level
+
             awarded_keys: list[str] = []
             if idx == 1 and int(prior_wins.get(normalized_email, 0) or 0) == 0:
                 if _grant_badge_award(
@@ -8644,6 +8690,37 @@ def resolve_tournament(tournament_id: int) -> dict:
                         "metadata": {"award_keys": awarded_keys, "entry_id": int(row["entry_id"]), "rank": int(idx)},
                     }
                 )
+                deferred_notifications.append(
+                    {
+                        "notification_key": "badges_earned",
+                        "message": f"You earned {len(awarded_keys)} badge(s): {', '.join(awarded_keys)}",
+                        "tournament_id": int(tournament_id),
+                        "entry_id": int(row["entry_id"]),
+                        "user_email": normalized_email,
+                        "metadata": {"badge_keys": awarded_keys},
+                    }
+                )
+
+            if idx == 1 and float(tournament.get("entry_fee", 0.0) or 0.0) > 0 and payout_amount > 0:
+                status = get_user_connect_status(normalized_email)
+                account_id = str(status.get("stripe_connect_account_id", "") or "")
+                onboarding_status = str(status.get("onboarding_status", "") or "")
+                if not account_id and onboarding_status in {"", "not_started"}:
+                    upsert_user_connect_status(
+                        normalized_email,
+                        stripe_connect_account_id="",
+                        onboarding_status="pending_winner_onboarding",
+                    )
+                    deferred_notifications.append(
+                        {
+                            "notification_key": "connect_onboarding_required",
+                            "message": "You won a paid tournament. Complete Stripe Connect onboarding to receive payouts.",
+                            "tournament_id": int(tournament_id),
+                            "entry_id": int(row["entry_id"]),
+                            "user_email": normalized_email,
+                            "metadata": {"reason": "first_paid_win"},
+                        }
+                    )
 
         conn.execute(
             """
@@ -8678,8 +8755,8 @@ def resolve_tournament(tournament_id: int) -> dict:
         for rank_idx, row in enumerate(scored_entries, start=1):
             deferred_notifications.append(
                 {
-                    "notification_key": "tournament_resolved",
-                    "message": f"Tournament #{tournament_id} resolved. Score: {row['total_score']}",
+                    "notification_key": "results_posted",
+                    "message": f"Results are in for tournament #{tournament_id}. Score: {row['total_score']}",
                     "tournament_id": tournament_id,
                     "entry_id": row["entry_id"],
                     "user_email": row.get("user_email", ""),
@@ -8704,5 +8781,28 @@ def resolve_tournament(tournament_id: int) -> dict:
     for item in deferred_events:
         log_event(**item)
     for item in deferred_notifications:
+        key = str(item.get("notification_key", "") or "")
+        if key == "results_posted":
+            notify_results_posted(
+                int(item.get("tournament_id", 0) or 0),
+                entry_id=item.get("entry_id"),
+                user_email=item.get("user_email"),
+                rank=(item.get("metadata") or {}).get("rank"),
+            )
+            continue
+        if key == "badges_earned":
+            notify_badges_earned(
+                str(item.get("user_email", "") or ""),
+                list((item.get("metadata") or {}).get("badge_keys") or []),
+                tournament_id=item.get("tournament_id"),
+            )
+            continue
+        if key == "level_up":
+            notify_level_up(
+                str(item.get("user_email", "") or ""),
+                int((item.get("metadata") or {}).get("new_level", 1) or 1),
+                tournament_id=item.get("tournament_id"),
+            )
+            continue
         send_notification(**item)
     return final_result or {"success": False, "error": "Resolve failed"}

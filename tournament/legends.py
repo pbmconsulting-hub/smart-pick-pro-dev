@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from datetime import date, datetime
 
 LEGEND_PROFILES = [
     {"player_id": "L001", "player_name": "Michael Jordan", "position": "SG", "legend_era": "90s", "overall_rating": 99, "salary": 15000, "archetype": "Elite Scorer"},
@@ -39,3 +40,10 @@ def get_monthly_legends(month: int) -> list[dict]:
     rotated = rotatable[start:] + rotatable[:start]
     selected = [l for l in LEGEND_PROFILES if l["player_id"] in fixed_ids] + rotated[:6]
     return deepcopy(selected)
+
+
+def get_active_monthly_legends(as_of: date | datetime | None = None) -> list[dict]:
+    """Return monthly legends using today's month when not explicitly provided."""
+    current = as_of or datetime.utcnow()
+    month = current.month if isinstance(current, datetime) else int(current.month)
+    return get_monthly_legends(month)

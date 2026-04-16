@@ -6,7 +6,7 @@ from datetime import date, datetime, time, timedelta
 
 from tournament.events import log_event
 from tournament.manager import create_tournament, list_open_tournaments, resolve_tournament
-from tournament.notifications import send_notification
+from tournament.notifications import notify_player_locked, notify_tournament_open, send_notification
 
 
 DEFAULT_WEEKLY_COURTS = [
@@ -49,6 +49,7 @@ def create_weekly_schedule(anchor_date: date | None = None, sport: str = "nba") 
                 tournament_id=tid,
                 metadata={"tier": tier, "entry_fee": fee, "min_entries": min_e, "max_entries": max_e},
             )
+            notify_tournament_open(tid)
     return created_ids
 
 
@@ -64,6 +65,7 @@ def resolve_locked_tournaments(now: datetime | None = None) -> list[dict]:
         except ValueError:
             continue
         if lock_dt <= now_dt:
+            notify_player_locked(int(tournament["tournament_id"]))
             result = resolve_tournament(int(tournament["tournament_id"]))
             resolved.append(result)
             log_event(
