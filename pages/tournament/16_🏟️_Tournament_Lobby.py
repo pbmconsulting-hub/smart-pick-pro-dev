@@ -27,6 +27,12 @@ from utils.tournament_manager import TournamentManager
 from utils.tournament_gate import TournamentGate
 from data.legends import get_available_legends_for_month
 from utils.tournament_mode import is_tournament_mode_active, render_tournament_toggle, toggle_tournament_mode
+from engine.joseph_brain import (
+    joseph_tournament_overpriced_call,
+    joseph_tournament_ownership_reaction,
+    joseph_tournament_preview,
+    joseph_tournament_sleeper_pick,
+)
 
 
 # ============================================================================
@@ -392,34 +398,54 @@ with tab_leaderboard:
 
 with tab_joseph:
     st.markdown("## 🎙️ Joseph's Desk")
-    
-    joseph_commentary = """
-    🏀 **Tonight's Matchups: Heat Check Analysis**
-    
-    Lakers-Celtics is the **GAME OF THE YEAR** setup. LeBron (28 PPG) vs Jayson Tatum (26 PPG) 
-    in a potential Finals preview. The over/under is 223.5 — that's a **shootout environment**.
-    
-    📊 **My Sleeper:**
-    - **Derrick Jones Jr.** (LAL, SG): 15% owned, 2.5× salary floor. Defensive matchup 
-      advantage against Derrick White (ankle scare). This is a **15-25 DK stack** setup.
-    - **Al Horford** (BOS, C): Matchup leverage. Against AD's soft defense. Rebounds will be **EATING**.
-    
-    🔥 **Boom/Bust Watch:**
-    - Kristaps Porzingis (BOS): 40% upside on a 3-pointer barrage, 10% downside on foul trouble. 
-      Use at 20% or less ownership.
-    
-    💡 **Tournament Strategy:** The 24-player field in Pro Court tonight has **14 with LeBron** 
-    (58% ownership). Stack against him in your lineups.
-    
-    🎯 **My Picks for Tonight:**
-    1. **Lakers Stack** (LeBron + AD + Jones Jr.) - Upside play
-    2. **Celtics Trio** (Tatum + Brown + Horford) - Floor play
-    3. **Spurs Value** (Wembanyama + DeRozan) - Salary relief
-    
-    **Good luck out there, ballers!** 🏀💰
-    """
-    
-    st.markdown(joseph_commentary)
+
+    featured_tournament = tonight_tournaments[0] if tonight_tournaments else {}
+    tier_map = {
+        "open_court": "Open",
+        "pro_court": "Pro",
+        "elite_court": "Elite",
+        "championship": "Championship",
+    }
+    preview_payload = {
+        "tournament_name": featured_tournament.get("name", "Tonight's Tournament"),
+        "court_tier": tier_map.get(featured_tournament.get("type", ""), "Open"),
+        "entry_fee": featured_tournament.get("entry_fee", 0.0),
+        "max_entries": featured_tournament.get("max_entries", 24),
+    }
+    top_players = [
+        {"player_name": "LeBron James", "salary": 11800},
+        {"player_name": "Jayson Tatum", "salary": 11200},
+        {"player_name": "Anthony Davis", "salary": 10400},
+    ]
+    ownership_data = [
+        {"player_name": "LeBron James", "ownership_pct": 58},
+        {"player_name": "Jayson Tatum", "ownership_pct": 34},
+        {"player_name": "Derrick Jones Jr.", "ownership_pct": 15},
+    ]
+
+    st.markdown("### 🏀 Tonight's Commissioner Preview")
+    st.markdown(joseph_tournament_preview(preview_payload, top_players))
+
+    st.markdown("### 📊 My Sleeper")
+    st.success(
+        joseph_tournament_sleeper_pick(
+            "Derrick Jones Jr.",
+            5200,
+            "Defensive matchup leverage and low projected ownership make this a clean tournament pivot.",
+        )
+    )
+
+    st.markdown("### 🔥 Boom/Bust Watch")
+    st.warning(
+        joseph_tournament_overpriced_call(
+            "Kristaps Porzingis",
+            9100,
+            "Foul-trouble volatility makes that tag too rich for this field.",
+        )
+    )
+
+    st.markdown("### 💡 Ownership Report")
+    st.info(joseph_tournament_ownership_reaction(preview_payload, ownership_data))
     
     # Expert tips
     st.markdown("---")
