@@ -187,7 +187,7 @@ print(profile)
 - ⏳ Live scoreboard
 - ⏳ Badge system
 - ⏳ LP leaderboard
-- ⏳ Multi-sport routing
+- ⏳ Additional multi-sport depth (current router supports NBA/MLB/NFL)
 
 ---
 
@@ -216,8 +216,11 @@ cd tournament
 **Q: When do I integrate with parent app engines?**
 A: Phase 1+. For now, Phase 0 is standalone with placeholder logic.
 
+**Q: Which sports are supported right now?**
+A: The tournament router currently supports `nba`, `mlb`, and `nfl`.
+
 **Q: How do I add more sports?**
-A: Create `tournament/sports/mlb.py`, `tournament/sports/nfl.py`, etc. Main engine is agnostic.
+A: Create another module under `tournament/sports/` and register it in `tournament/sports/router.py`. Main engine routing is already sport-aware.
 
 **Q: What's the database?**
 A: SQLite by default (tournament.db). Can swap to PostgreSQL in .env.

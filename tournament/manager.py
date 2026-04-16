@@ -8446,7 +8446,14 @@ def resolve_tournament(tournament_id: int) -> dict:
                     int(tournament_id),
                     pid,
                     str(profile.get("player_name", "")),
-                    json.dumps({k: int(v) for k, v in scored.items() if k in ("points", "rebounds", "assists", "steals", "blocks", "turnovers", "threes")}),
+                    json.dumps(
+                        {
+                            k: int(v)
+                            for k, v in scored.items()
+                            if isinstance(v, (int, float))
+                            and k not in ("fantasy_points", "total_fp")
+                        }
+                    ),
                     float(scored.get("fantasy_points", 0.0)),
                     json.dumps(scored.get("bonuses", {})),
                     json.dumps(scored.get("penalties", {})),

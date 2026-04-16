@@ -118,3 +118,36 @@ def test_live_snapshot_returns_entries_and_top_players(isolated_db, monkeypatch)
     assert len(snapshot["leaderboard"]) == 1
     assert len(snapshot["my_entries"]) == 1
     assert len(snapshot["top_players"]) >= 1
+
+
+def test_non_nba_live_snapshot_preserves_sport_specific_stat_lines(isolated_db, monkeypatch):
+    monkeypatch.setattr(
+        manager,
+        "simulate_player_full_line",
+        lambda profile, env, seed: {
+            "hits": 2,
+            "runs": 1,
+            "rbi": 1,
+            "home_runs": 1,
+            "stolen_bases": 0,
+        },
+    )
+
+    roster = _make_roster(paid=False)
+    _seed_profiles(roster)
+
+    tid = create_tournament("MLB Snapshot", "Open", 0.0, 1, 64, "2099-06-01T20:00:00", sport="mlb")
+    ok, _, _ = submit_entry(tid, "mlb@test.com", "MLB User", roster)
+    assert ok is True
+
+    result = resolve_tournament(tid)
+    assert result["success"] is True
+    assert result["sport"] == "mlb"
+
+    snapshot = get_tournament_live_snapshot(tid, user_email="mlb@test.com", top_n=10)
+    assert snapshot["success"] is True
+    assert len(snapshot["top_players"]) >= 1
+    first_line = snapshot["top_players"][0]["line"]
+    assert first_line["hits"] == 2
+    assert first_line["home_runs"] == 1
+    assert "points" not in first_line
