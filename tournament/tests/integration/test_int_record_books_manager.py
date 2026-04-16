@@ -36,9 +36,17 @@ def _seed_records() -> None:
             INSERT INTO championship_history
                 (season_label, tournament_id, winner_email, winner_display_name, winning_score, payout_amount, roster_json, created_at)
             VALUES
-                ('2026 S1', 101, 'alpha@test.com', 'Alpha', 301.2, 25000.0, ?, '2099-01-03T00:00:00')
+                ('2026 S1', 101, 'alpha@test.com', 'Alpha', 301.2, 25000.0, ?, '2099-01-03T00:00:00'),
+                ('2025 S4', 101, 'alpha@test.com', 'Alpha', 290.0, 20000.0, ?, '2098-10-03T00:00:00'),
+                ('2025 S3', 101, 'alpha@test.com', 'Alpha', 285.5, 18000.0, ?, '2098-07-03T00:00:00'),
+                ('2025 S2', 101, 'alpha@test.com', 'Alpha', 275.0, 15000.0, ?, '2098-04-03T00:00:00'),
+                ('2025 S1', 101, 'alpha@test.com', 'Alpha', 270.0, 12000.0, ?, '2098-01-03T00:00:00')
             """,
-            (json.dumps([{"player_id": "A1"}]),),
+            (json.dumps([{"player_id": "A1"}]),
+             json.dumps([{"player_id": "A1"}]),
+             json.dumps([{"player_id": "A1"}]),
+             json.dumps([{"player_id": "A1"}]),
+             json.dumps([{"player_id": "A1"}])),
         )
 
         entries = [
