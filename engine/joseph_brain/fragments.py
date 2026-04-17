@@ -1374,6 +1374,91 @@ _SHORT_TAKE_TEMPLATES = {
 
 
 # ═══════════════════════════════════════════════════════════════
+# TOURNAMENT FRAGMENT POOLS — Joseph as League Commissioner
+# ═══════════════════════════════════════════════════════════════
+
+TOURNAMENT_PREVIEW_POOL = [
+    {"id": "tp_01", "text": "Welcome to TOURNAMENT NIGHT! I'm Joseph M. Smith, your League Commissioner, and I have been studying these rosters ALL day..."},
+    {"id": "tp_02", "text": "It's GAME DAY in the SmartAI Championship League and Commissioner Joseph M. Smith is READY to break it all down for you..."},
+    {"id": "tp_03", "text": "The tournament locks in {hours} hours and I've already analyzed EVERY player in the pool. Let me give you the PREVIEW..."},
+    {"id": "tp_04", "text": "This is YOUR League Commissioner speaking — tonight's tournament is going to be SPECIAL and I'm going to tell you WHY..."},
+    {"id": "tp_05", "text": "I've been running the numbers since SUNRISE. Tonight's tournament field has some FASCINATING dynamics. Let me break it DOWN..."},
+    {"id": "tp_06", "text": "Commissioner's PRE-GAME REPORT! I've looked at every salary, every matchup, every ownership projection — and I have THOUGHTS..."},
+    {"id": "tp_07", "text": "Tournament night is the BEST night of the week and your Commissioner has the INTEL to prove it. Here's your preview..."},
+    {"id": "tp_08", "text": "The field is filling up and the rosters are taking shape. As YOUR Commissioner, let me tell you what I'm SEEING..."},
+    {"id": "tp_09", "text": "ATTENTION tournament participants! Commissioner Joseph M. Smith has completed his pre-game analysis and it is FIRE..."},
+    {"id": "tp_10", "text": "Before you finalize that roster, your Commissioner has a FEW things to say about tonight's player pool..."},
+    {"id": "tp_11", "text": "The Commissioner's PREVIEW is here! I've simulated thousands of outcomes and the VALUE tonight is in some UNEXPECTED places..."},
+    {"id": "tp_12", "text": "This is the OFFICIAL pre-game briefing from your League Commissioner. Tonight's tournament has CHAMPIONSHIP-level intrigue..."},
+]
+
+TOURNAMENT_OWNERSHIP_REACTION_POOL = [
+    {"id": "to_01", "text": "The rosters are LOCKED and I can see the ownership numbers. Let me tell you — some of you are going to be VERY happy and some of you are NOT..."},
+    {"id": "to_02", "text": "LOCK! The tournament is sealed and Commissioner Joseph M. Smith has the ownership breakdown. This is FASCINATING..."},
+    {"id": "to_03", "text": "Rosters are IN and the ownership percentages are REVEALED. As your Commissioner, I have to say — the CHALK is HEAVY tonight..."},
+    {"id": "to_04", "text": "The lock just hit and I'm looking at ownership. Some of you went CONTRARIAN and I RESPECT that. Others went CHALK and that's a RISK..."},
+    {"id": "to_05", "text": "Tournament LOCKED! Your Commissioner is now reviewing the field. The ownership distribution tells a STORY and I'm going to READ it to you..."},
+    {"id": "to_06", "text": "IT'S LOCKED! Nobody can change their roster now. As Commissioner, I can see EVERYTHING — and the ownership numbers are TELLING..."},
+    {"id": "to_07", "text": "The moment of TRUTH! Rosters are locked and your Commissioner can see who went where. The ownership splits are INTERESTING..."},
+    {"id": "to_08", "text": "LOCKED IN! Commissioner's ownership report: I see some BRAVE roster choices and some PREDICTABLE ones. Let me break it down..."},
+    {"id": "to_09", "text": "The tournament is SEALED. I'm looking at the ownership data and I already know who has the EDGE. Your Commissioner sees ALL..."},
+    {"id": "to_10", "text": "Rosters are FINAL! The Commissioner's first observation: the ownership concentration tonight is going to make or BREAK some entries..."},
+]
+
+TOURNAMENT_RESULTS_POOL = [
+    {"id": "tr_01", "text": "The simulation is COMPLETE and your Commissioner has the RESULTS! Let me tell you — this tournament did NOT disappoint..."},
+    {"id": "tr_02", "text": "FINAL SCORES are in! Commissioner Joseph M. Smith is here to deliver the verdict on tonight's tournament. What a RIDE..."},
+    {"id": "tr_03", "text": "The scores have been REVEALED and as your Commissioner, I have to say — tonight's winner EARNED it. Let me break down what happened..."},
+    {"id": "tr_04", "text": "Tournament COMPLETE! Your Commissioner has reviewed every score, every stat line, every roster decision. Here's the RECAP..."},
+    {"id": "tr_05", "text": "The results are FINAL and the Commissioner has SPOKEN! Tonight's tournament produced some INCREDIBLE performances..."},
+    {"id": "tr_06", "text": "SCORES ARE IN! As your League Commissioner, I am here to celebrate the WINNERS and analyze what went wrong for everyone else..."},
+    {"id": "tr_07", "text": "The simulation has spoken! Commissioner's final report: tonight's tournament had DRAMA, UPSETS, and a worthy CHAMPION..."},
+    {"id": "tr_08", "text": "Tournament night is OVER and your Commissioner is ready to hand out the HARDWARE. What a tournament this was..."},
+    {"id": "tr_09", "text": "The fantasy points have been TALLIED and the Commissioner's verdict is IN. Let me walk you through what just happened..."},
+    {"id": "tr_10", "text": "FINAL WHISTLE! Commissioner Joseph M. Smith has the complete breakdown. Tonight's tournament was one for the RECORD BOOKS..."},
+]
+
+TOURNAMENT_BUST_POOL = [
+    {"id": "tb_01", "text": "{player} at ${salary}? That's OVERPRICED and I've been saying it ALL day. The Commissioner WARNED you!"},
+    {"id": "tb_02", "text": "I TOLD you {player} was a TRAP at ${salary}. The salary doesn't match the projected output and the Commissioner's numbers PROVED it!"},
+    {"id": "tb_03", "text": "{player} is chalk at ${salary} and the Commissioner is FADING. The ownership is going to be TOO high for the ceiling you're getting!"},
+    {"id": "tb_04", "text": "Commissioner's BUST ALERT: {player} at ${salary} is a MIRAGE. The salary is INFLATED and the matchup doesn't support the price tag!"},
+    {"id": "tb_05", "text": "Let the PUBLIC have {player} at ${salary}. The Commissioner knows that salary is BLOATED and the smart money is going ELSEWHERE!"},
+    {"id": "tb_06", "text": "{player} at that salary? OVERPRICED! Your Commissioner has crunched the numbers and the value is NOT there at ${salary}!"},
+    {"id": "tb_07", "text": "The Commissioner's OVERPRICED player of the night: {player} at ${salary}. Too much salary for too little EDGE. FADE the chalk!"},
+    {"id": "tb_08", "text": "Everyone is going to roster {player} at ${salary} and that's EXACTLY why the Commissioner is staying AWAY. Contrarian WINS tournaments!"},
+    {"id": "tb_09", "text": "{player} for ${salary}? The Commissioner says NO. That money is better spent on VALUE plays that give you a real EDGE!"},
+    {"id": "tb_10", "text": "BUYER BEWARE! {player} at ${salary} looks appealing but the Commissioner's analysis says the price is WRONG. This is a BUST waiting to happen!"},
+]
+
+TOURNAMENT_SLEEPER_HIT_POOL = [
+    {"id": "ts_01", "text": "{player} at ${salary} is the Commissioner's SLEEPER of the night! Low ownership, high ceiling — this is how you WIN tournaments!"},
+    {"id": "ts_02", "text": "SLEEPER ALERT from your Commissioner: {player} at ${salary} is the most UNDERPRICED player in the pool tonight!"},
+    {"id": "ts_03", "text": "The Commissioner's SECRET WEAPON: {player} at only ${salary}. Nobody is talking about this player and that's EXACTLY why I love it!"},
+    {"id": "ts_04", "text": "{player} at ${salary}? The ownership is going to be TINY and the ceiling is MASSIVE. Your Commissioner just handed you a GIFT!"},
+    {"id": "ts_05", "text": "Commissioner's SLEEPER PICK: {player} at ${salary}. The salary is too LOW for the opportunity this player has tonight!"},
+    {"id": "ts_06", "text": "Want to win the tournament? Listen to your Commissioner: {player} at ${salary} is CRIMINALLY underpriced. SLEEPER HIT incoming!"},
+    {"id": "ts_07", "text": "While everyone chases the chalk, the Commissioner is QUIETLY locking in {player} at ${salary}. This is the SLEEPER that wins tournaments!"},
+    {"id": "ts_08", "text": "{player} at ${salary} — the ownership will be under 10% and the Commissioner thinks the production will be TOP TIER. SLEEPER!"},
+    {"id": "ts_09", "text": "The Commissioner has found tonight's HIDDEN GEM: {player} at ${salary}. Low salary, low ownership, HIGH ceiling. That's the FORMULA!"},
+    {"id": "ts_10", "text": "SLEEPER ALERT! Commissioner Joseph M. Smith is pounding the table on {player} at ${salary}. This is tournament-WINNING value!"},
+]
+
+TOURNAMENT_CHAMPIONSHIP_POOL = [
+    {"id": "tc_01", "text": "Welcome to CHAMPIONSHIP NIGHT! This is Commissioner Joseph M. Smith and tonight we crown a CHAMPION!"},
+    {"id": "tc_02", "text": "The Championship reveal is UNDERWAY! Your Commissioner is calling this play-by-play and the tension is ELECTRIC..."},
+    {"id": "tc_03", "text": "We are in the FINAL PHASE of the Championship and the scores are TIGHTENING. This is what tournament basketball is ALL about!"},
+    {"id": "tc_04", "text": "CHAMPIONSHIP UPDATE! The leaderboard just SHIFTED and your Commissioner is on the edge of his SEAT..."},
+    {"id": "tc_05", "text": "The staged reveal continues and the Commissioner can barely CONTAIN himself! This Championship is going down to the WIRE..."},
+    {"id": "tc_06", "text": "Phase {phase} of the Championship reveal is COMPLETE! Commissioner's reaction: this is the most DRAMATIC finish I've ever seen!"},
+    {"id": "tc_07", "text": "The Championship is being decided RIGHT NOW and your Commissioner has FRONT ROW seats to the action!"},
+    {"id": "tc_08", "text": "CHAMPIONSHIP PLAY-BY-PLAY! Commissioner Joseph M. Smith is LIVE and the scores are coming in HOT..."},
+    {"id": "tc_09", "text": "We are in the HOME STRETCH of the Championship! Your Commissioner has analyzed every possibility and the winner is about to be CROWNED..."},
+    {"id": "tc_10", "text": "The FINAL phase of the Championship reveal! Commissioner Joseph M. Smith will now announce the CHAMPION of the SmartAI League!"},
+]
+
+
+# ═══════════════════════════════════════════════════════════════
 # FRAGMENT PICKER FUNCTIONS
 # ═══════════════════════════════════════════════════════════════
 
