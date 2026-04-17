@@ -35,6 +35,13 @@ from engine.joseph_brain._monolith import (
     joseph_rank_picks,
     joseph_vault_reaction,
     reset_fragment_state,
+    # ── Tournament Commentary Functions ────────────────────────
+    joseph_tournament_preview,
+    joseph_tournament_overpriced_call,
+    joseph_tournament_sleeper_pick,
+    joseph_tournament_ownership_reaction,
+    joseph_tournament_score_reaction,
+    joseph_tournament_championship_play_by_play,
     # ── Constants ───────────────────────────────────────────────
     AMBIENT_CONTEXT_POOL,
     AMBIENT_POOLS,
@@ -64,6 +71,13 @@ from engine.joseph_brain._monolith import (
     TICKET_NAMES,
     VERDICT_EMOJIS,
     VERDICT_THRESHOLDS,
+    # ── Tournament Fragment Pools ──────────────────────────────
+    TOURNAMENT_PREVIEW_POOL,
+    TOURNAMENT_OWNERSHIP_REACTION_POOL,
+    TOURNAMENT_RESULTS_POOL,
+    TOURNAMENT_BUST_POOL,
+    TOURNAMENT_SLEEPER_HIT_POOL,
+    TOURNAMENT_CHAMPIONSHIP_POOL,
     # ── Private functions (imported by tests) ──────────────────
     _build_data_sentences,
     _compute_hit_rate,
@@ -119,6 +133,13 @@ __all__ = [
     "joseph_rank_picks",
     "joseph_vault_reaction",
     "reset_fragment_state",
+    # Tournament commentary functions
+    "joseph_tournament_preview",
+    "joseph_tournament_overpriced_call",
+    "joseph_tournament_sleeper_pick",
+    "joseph_tournament_ownership_reaction",
+    "joseph_tournament_score_reaction",
+    "joseph_tournament_championship_play_by_play",
     # Constants
     "AMBIENT_CONTEXT_POOL",
     "AMBIENT_POOLS",
@@ -148,4 +169,11 @@ __all__ = [
     "TICKET_NAMES",
     "VERDICT_EMOJIS",
     "VERDICT_THRESHOLDS",
+    # Tournament fragment pools
+    "TOURNAMENT_PREVIEW_POOL",
+    "TOURNAMENT_OWNERSHIP_REACTION_POOL",
+    "TOURNAMENT_RESULTS_POOL",
+    "TOURNAMENT_BUST_POOL",
+    "TOURNAMENT_SLEEPER_HIT_POOL",
+    "TOURNAMENT_CHAMPIONSHIP_POOL",
 ]

@@ -109,19 +109,44 @@ def get_checkout_session_record(session_id: str) -> dict | None:
 
 
 def process_stripe_event(event: dict[str, Any]) -> dict:
-    """Process one Stripe webhook event and persist supported checkout records."""
+    """Process one Stripe webhook event and persist supported checkout records.
+
+    Handles:
+    - ``checkout.session.completed`` — persists checkout session for paid entries
+    - ``customer.subscription.updated`` — syncs premium / legend pass status
+    - ``customer.subscription.deleted`` — marks subscription inactive
+    - ``invoice.payment_failed`` — marks subscription as past-due
+    """
     event_type = str(event.get("type", "")).strip()
     event_id = str(event.get("id", "")).strip()
-
-    if event_type != "checkout.session.completed":
-        return {
-            "success": True,
-            "handled": False,
-            "event_type": event_type,
-            "reason": "ignored_event_type",
-        }
-
     data_object = event.get("data", {}).get("object", {})
+
+    # ── Checkout session completed (one-time tournament entry) ────────
+    if event_type == "checkout.session.completed":
+        return _handle_checkout_completed(event_type, event_id, data_object, event)
+
+    # ── Subscription lifecycle ────────────────────────────────────────
+    if event_type in ("customer.subscription.updated", "customer.subscription.deleted"):
+        return _handle_subscription_change(event_type, event_id, data_object)
+
+    if event_type == "invoice.payment_failed":
+        return _handle_invoice_payment_failed(event_type, event_id, data_object)
+
+    return {
+        "success": True,
+        "handled": False,
+        "event_type": event_type,
+        "reason": "ignored_event_type",
+    }
+
+
+def _handle_checkout_completed(
+    event_type: str,
+    event_id: str,
+    data_object: dict[str, Any],
+    full_event: dict[str, Any],
+) -> dict:
+    """Persist a checkout.session.completed event."""
     session_id = str(data_object.get("id", "")).strip()
     if not session_id:
         return {
@@ -153,6 +178,11 @@ def process_stripe_event(event: dict[str, Any]) -> dict:
         or data_object.get("customer_email", "")
     ).strip().lower()
 
+    # If this is a subscription checkout (legend_pass or premium), sync status
+    meta_type = str(metadata.get("type", "")).strip()
+    if meta_type in ("legend_pass_subscription", "premium_subscription") and customer_email:
+        _sync_subscription_from_checkout(meta_type, customer_email)
+
     saved = upsert_checkout_session(
         session_id,
         tournament_id=tournament_id,
@@ -160,7 +190,7 @@ def process_stripe_event(event: dict[str, Any]) -> dict:
         payment_intent_id=payment_intent_id,
         payment_status=payment_status,
         stripe_event_id=event_id,
-        raw_event=event,
+        raw_event=full_event,
     )
 
     if not saved:
@@ -194,3 +224,205 @@ def process_stripe_event(event: dict[str, Any]) -> dict:
         "payment_intent_id": payment_intent_id,
         "payment_status": payment_status,
     }
+
+
+def _handle_subscription_change(
+    event_type: str,
+    event_id: str,
+    data_object: dict[str, Any],
+) -> dict:
+    """Handle subscription updated/deleted events to sync tournament access."""
+    sub_id = str(data_object.get("id", "")).strip()
+    status = str(data_object.get("status", "")).strip()
+    metadata = dict(data_object.get("metadata") or {})
+    meta_type = str(metadata.get("type", "")).strip()
+
+    # Extract customer email
+    customer = data_object.get("customer")
+    if isinstance(customer, dict):
+        customer_email = str(customer.get("email", "") or "").strip().lower()
+    else:
+        customer_email = str(metadata.get("customer_email", "") or "").strip().lower()
+
+    if not customer_email:
+        customer_email = str(data_object.get("customer_email", "") or "").strip().lower()
+
+    if event_type == "customer.subscription.deleted":
+        status = "canceled"
+
+    is_active = status in ("active", "trialing")
+
+    # Determine which product changed
+    premium_active = None
+    legend_pass_active = None
+    premium_expires_at = ""
+    legend_pass_expires_at = ""
+
+    period_end = ""
+    raw_end = data_object.get("current_period_end")
+    if raw_end:
+        try:
+            from datetime import datetime, timezone
+            period_end = datetime.fromtimestamp(int(raw_end), tz=timezone.utc).isoformat()
+        except Exception:
+            period_end = str(raw_end)
+
+    if meta_type == "legend_pass_subscription":
+        legend_pass_active = is_active
+        legend_pass_expires_at = period_end
+    elif meta_type == "premium_subscription":
+        premium_active = is_active
+        premium_expires_at = period_end
+    else:
+        # Try to infer from price/product
+        items = data_object.get("items", {}).get("data", [])
+        for item in items:
+            price = item.get("price", {})
+            price_id = str(price.get("id", "") or "").strip()
+            from tournament.stripe import STRIPE_LEGEND_PASS_PRICE_ID, STRIPE_PREMIUM_PRICE_ID
+            if price_id and price_id == STRIPE_LEGEND_PASS_PRICE_ID:
+                legend_pass_active = is_active
+                legend_pass_expires_at = period_end
+            elif price_id and price_id == STRIPE_PREMIUM_PRICE_ID:
+                premium_active = is_active
+                premium_expires_at = period_end
+
+    if customer_email and (premium_active is not None or legend_pass_active is not None):
+        _upsert_subscription_status(
+            customer_email,
+            premium_active=premium_active,
+            legend_pass_active=legend_pass_active,
+            premium_expires_at=premium_expires_at,
+            legend_pass_expires_at=legend_pass_expires_at,
+            source=f"stripe_webhook:{event_type}",
+        )
+
+    log_event(
+        f"stripe.{event_type.replace('.', '_')}",
+        f"Subscription {sub_id} → {status}",
+        user_email=customer_email,
+        metadata={
+            "subscription_id": sub_id,
+            "status": status,
+            "meta_type": meta_type,
+            "stripe_event_id": event_id,
+        },
+    )
+
+    return {
+        "success": True,
+        "handled": True,
+        "event_type": event_type,
+        "subscription_id": sub_id,
+        "status": status,
+        "customer_email": customer_email,
+    }
+
+
+def _handle_invoice_payment_failed(
+    event_type: str,
+    event_id: str,
+    data_object: dict[str, Any],
+) -> dict:
+    """Handle failed invoice payments (mark subscription past_due)."""
+    sub_id = str(data_object.get("subscription", "") or "").strip()
+    customer_email = str(data_object.get("customer_email", "") or "").strip().lower()
+
+    log_event(
+        "stripe.invoice_payment_failed",
+        f"Invoice payment failed for subscription {sub_id}",
+        user_email=customer_email,
+        severity="warning",
+        metadata={
+            "subscription_id": sub_id,
+            "stripe_event_id": event_id,
+        },
+    )
+
+    return {
+        "success": True,
+        "handled": True,
+        "event_type": event_type,
+        "subscription_id": sub_id,
+        "customer_email": customer_email,
+    }
+
+
+# ── Internal helpers ──────────────────────────────────────────────────
+
+
+def _sync_subscription_from_checkout(meta_type: str, customer_email: str) -> None:
+    """Activate a subscription tier after a successful checkout."""
+    premium_active = None
+    legend_pass_active = None
+    if meta_type == "legend_pass_subscription":
+        legend_pass_active = True
+    elif meta_type == "premium_subscription":
+        premium_active = True
+    if premium_active is not None or legend_pass_active is not None:
+        _upsert_subscription_status(
+            customer_email,
+            premium_active=premium_active,
+            legend_pass_active=legend_pass_active,
+            source="stripe_checkout_completed",
+        )
+
+
+def _upsert_subscription_status(
+    user_email: str,
+    *,
+    premium_active: bool | None = None,
+    legend_pass_active: bool | None = None,
+    premium_expires_at: str = "",
+    legend_pass_expires_at: str = "",
+    source: str = "stripe_webhook",
+) -> None:
+    """Persist subscription status changes to the tournament database.
+
+    Only fields that are explicitly set (not None) are updated; the others
+    are left unchanged.
+    """
+    try:
+        from tournament.database import get_tournament_connection, initialize_tournament_database
+        initialize_tournament_database()
+
+        email = str(user_email or "").strip().lower()
+        if not email:
+            return
+
+        with get_tournament_connection() as conn:
+            existing = conn.execute(
+                "SELECT premium_active, legend_pass_active, premium_expires_at, legend_pass_expires_at FROM user_subscription_status WHERE user_email = ?",
+                (email,),
+            ).fetchone()
+
+            if existing:
+                pa = int(premium_active) if premium_active is not None else int(existing["premium_active"] or 0)
+                la = int(legend_pass_active) if legend_pass_active is not None else int(existing["legend_pass_active"] or 0)
+                pe = premium_expires_at if premium_expires_at else str(existing["premium_expires_at"] or "")
+                le = legend_pass_expires_at if legend_pass_expires_at else str(existing["legend_pass_expires_at"] or "")
+            else:
+                pa = int(premium_active) if premium_active is not None else 0
+                la = int(legend_pass_active) if legend_pass_active is not None else 0
+                pe = premium_expires_at
+                le = legend_pass_expires_at
+
+            conn.execute(
+                """
+                INSERT INTO user_subscription_status
+                    (user_email, premium_active, legend_pass_active, premium_expires_at,
+                     legend_pass_expires_at, source, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+                ON CONFLICT(user_email) DO UPDATE SET
+                    premium_active = excluded.premium_active,
+                    legend_pass_active = excluded.legend_pass_active,
+                    premium_expires_at = excluded.premium_expires_at,
+                    legend_pass_expires_at = excluded.legend_pass_expires_at,
+                    source = excluded.source,
+                    updated_at = datetime('now')
+                """,
+                (email, pa, la, pe, le, str(source)),
+            )
+            conn.commit()
+    except Exception:
+        pass  # Best-effort — log in calling code

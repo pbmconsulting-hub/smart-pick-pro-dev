@@ -380,7 +380,7 @@ class TestImportFallbacks(unittest.TestCase):
         self.assertEqual(BLOWOUT_DIFFERENTIAL_HEAVY, 20)
 
 
-# ── Section B new: AMBIENT_POOLS (6 contexts × 15 lines) ───
+# ── Section B new: AMBIENT_POOLS (7 original contexts + 19 page contexts) ───
 
 
 class TestAmbientPools(unittest.TestCase):
@@ -411,8 +411,8 @@ class TestAmbientPools(unittest.TestCase):
         self.assertTrue(page_keys.issubset(set(self.pool.keys())))
 
     def test_total_pool_count(self):
-        """AMBIENT_POOLS should have 25 pools (6 original + 19 page)."""
-        self.assertEqual(len(self.pool), 25)
+        """AMBIENT_POOLS should have 26 pools (7 original + 19 page)."""
+        self.assertEqual(len(self.pool), 26)
 
     def test_each_context_has_15_lines(self):
         for key, lines in self.pool.items():
@@ -501,18 +501,29 @@ class TestJosephCompsDatabase(unittest.TestCase):
         self.assertGreaterEqual(len(self.db), 50)
 
     def test_required_keys(self):
-        """Every entry has all six required keys."""
+        """Every entry has the required core keys."""
         required_keys = {"name", "archetype", "stat_context", "tier",
                          "narrative", "template"}
         for i, entry in enumerate(self.db):
-            self.assertEqual(set(entry.keys()), required_keys,
-                             f"Entry {i} ({entry.get('name', '?')}) missing keys")
+            self.assertTrue(required_keys.issubset(set(entry.keys())),
+                            f"Entry {i} ({entry.get('name', '?')}) missing keys")
+
+    def test_optional_keys_are_supported(self):
+        for entry in self.db:
+            extra_keys = set(entry.keys()) - {"name", "archetype", "stat_context", "tier",
+                                              "narrative", "template"}
+            self.assertTrue(extra_keys.issubset({"playoff_specific"}))
+            if "playoff_specific" in entry:
+                self.assertIsInstance(entry["playoff_specific"], bool)
 
     def test_all_values_are_strings(self):
         for entry in self.db:
             for k, v in entry.items():
-                self.assertIsInstance(v, str, f"{entry['name']}.{k} not a string")
-                self.assertTrue(len(v) > 0, f"{entry['name']}.{k} is empty")
+                if k == "playoff_specific":
+                    self.assertIsInstance(v, bool, f"{entry['name']}.{k} not a bool")
+                else:
+                    self.assertIsInstance(v, str, f"{entry['name']}.{k} not a string")
+                    self.assertTrue(len(v) > 0, f"{entry['name']}.{k} is empty")
 
     def test_all_13_archetypes_present(self):
         archetypes = {e["archetype"] for e in self.db}
@@ -573,6 +584,11 @@ class TestDawgFactorTable(unittest.TestCase):
                     "trap_game", "back_to_back", "altitude",
                     "blowout_risk", "pace_down",
                     "elimination_game", "clinch_scenario", "milestone_watch",
+                    "playoff_game", "game_seven", "series_clinch",
+                    "facing_elimination", "conf_finals", "nba_finals",
+                    "playoff_home_crowd", "playoff_road_hostile",
+                    "series_momentum", "series_deficit", "playoff_rest_edge",
+                    "playoff_fatigue", "closeout_superstar", "playoff_revenge",
                     "three_in_four_nights", "well_rested", "trending_up",
                     "trending_down", "clutch_performer", "market_high_total",
                     "market_low_total", "opp_top5_defense", "opp_bottom5_defense",
@@ -1272,6 +1288,96 @@ class TestNewExportsImportable(unittest.TestCase):
         self.assertTrue(callable(joseph_ambient_line))
         self.assertTrue(callable(joseph_commentary))
         self.assertTrue(callable(joseph_auto_log_bets))
+
+
+class TestJosephTournamentCommentary(unittest.TestCase):
+    def setUp(self):
+        from engine.joseph_brain import (
+            joseph_tournament_championship_play_by_play,
+            joseph_tournament_ownership_reaction,
+            joseph_tournament_overpriced_call,
+            joseph_tournament_preview,
+            joseph_tournament_score_reaction,
+            joseph_tournament_sleeper_pick,
+            reset_fragment_state,
+        )
+        reset_fragment_state()
+        self.preview = joseph_tournament_preview
+        self.overpriced = joseph_tournament_overpriced_call
+        self.sleeper = joseph_tournament_sleeper_pick
+        self.ownership = joseph_tournament_ownership_reaction
+        self.score_reaction = joseph_tournament_score_reaction
+        self.championship = joseph_tournament_championship_play_by_play
+        self.tournament = {
+            "tournament_name": "Sunday Night Scorer",
+            "court_tier": "Pro",
+            "entry_fee": 5.0,
+            "max_entries": 24,
+        }
+
+    def test_preview_mentions_tournament_name(self):
+        result = self.preview(
+            self.tournament,
+            [
+                {"player_name": "LeBron James", "salary": 11800},
+                {"player_name": "Jayson Tatum", "salary": 11200},
+                {"player_name": "Anthony Davis", "salary": 10400},
+            ],
+        )
+        self.assertIn("Sunday Night Scorer", result)
+        self.assertIn("LeBron James", result)
+
+    def test_overpriced_call_mentions_player_and_salary(self):
+        result = self.overpriced("Kristaps Porzingis", 9100, "Volatile foul-trouble profile.")
+        self.assertIn("Kristaps Porzingis", result)
+        self.assertIn("$9,100", result)
+        self.assertIn("Volatile foul-trouble profile.", result)
+
+    def test_sleeper_pick_mentions_player_and_salary(self):
+        result = self.sleeper("Derrick Jones Jr.", 5200, "Low ownership leverage.")
+        self.assertIn("Derrick Jones Jr.", result)
+        self.assertIn("$5,200", result)
+        self.assertIn("Low ownership leverage.", result)
+
+    def test_ownership_reaction_summarizes_high_and_low_owned_players(self):
+        result = self.ownership(
+            self.tournament,
+            [
+                {"player_name": "LeBron James", "ownership_pct": 58},
+                {"player_name": "Jayson Tatum", "ownership_pct": 34},
+                {"player_name": "Derrick Jones Jr.", "ownership_pct": 9},
+            ],
+        )
+        self.assertIn("LeBron James", result)
+        self.assertIn("58%", result)
+        self.assertIn("Derrick Jones Jr.", result)
+
+    def test_score_reaction_mentions_winner_and_payout(self):
+        result = self.score_reaction(
+            self.tournament,
+            winner={"display_name": "DemoUser", "total_fp": 302.5, "payout": 100},
+            top_entries=[
+                {"display_name": "DemoUser", "total_fp": 302.5},
+                {"display_name": "RunnerUp", "total_fp": 294.0},
+            ],
+        )
+        self.assertIn("DemoUser", result)
+        self.assertIn("302.5", result)
+        self.assertIn("$100", result)
+
+    def test_championship_play_by_play_mentions_phase_and_leader(self):
+        result = self.championship(
+            2,
+            4,
+            leaderboard=[
+                {"display_name": "DemoUser", "total_fp": 201.5, "rank": 1},
+                {"display_name": "RunnerUp", "total_fp": 198.0, "rank": 2},
+            ],
+            tournament={"tournament_name": "Championship Night"},
+        )
+        self.assertIn("phase 2", result.lower())
+        self.assertIn("DemoUser", result)
+        self.assertIn("RunnerUp", result)
 
 
 # ── Independent Pick Generation Tests ──────────────────────

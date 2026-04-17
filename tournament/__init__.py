@@ -95,6 +95,7 @@ try:
         list_tournaments,
         list_user_entries,
         get_tournament_live_snapshot,
+        get_staged_reveal_snapshot,
         get_tournament_simulated_scores,
         load_tournament_entries,
         mark_pending_paid_entry_finalized,
@@ -204,6 +205,7 @@ except Exception:  # pragma: no cover
     list_tournaments = None  # type: ignore[assignment]
     list_user_entries = None  # type: ignore[assignment]
     get_tournament_live_snapshot = None  # type: ignore[assignment]
+    get_staged_reveal_snapshot = None  # type: ignore[assignment]
     get_tournament_simulated_scores = None  # type: ignore[assignment]
     load_tournament_entries = None  # type: ignore[assignment]
     mark_pending_paid_entry_finalized = None  # type: ignore[assignment]
@@ -297,6 +299,9 @@ try:
         get_connect_account_status,
         create_winner_payout_transfer,
         get_checkout_session_details,
+        create_legend_pass_checkout_session,
+        create_premium_checkout_session,
+        get_subscription_details,
     )
 except Exception:  # pragma: no cover
     create_connect_account = None  # type: ignore[assignment]
@@ -306,6 +311,9 @@ except Exception:  # pragma: no cover
     get_connect_account_status = None  # type: ignore[assignment]
     create_winner_payout_transfer = None  # type: ignore[assignment]
     get_checkout_session_details = None  # type: ignore[assignment]
+    create_legend_pass_checkout_session = None  # type: ignore[assignment]
+    create_premium_checkout_session = None  # type: ignore[assignment]
+    get_subscription_details = None  # type: ignore[assignment]
 # fmt: on
 
 __all__ = [
@@ -337,6 +345,9 @@ __all__ = [
     "create_tournament_refund",
     "create_winner_payout_transfer",
     "get_checkout_session_details",
+    "create_legend_pass_checkout_session",
+    "create_premium_checkout_session",
+    "get_subscription_details",
     "create_weekly_schedule",
     "ensure_profile_pool",
     "evaluate_tournament_access",
@@ -385,6 +396,7 @@ __all__ = [
     "list_user_notifications",
     "list_user_entries",
     "get_tournament_live_snapshot",
+    "get_staged_reveal_snapshot",
     "get_tournament_simulated_scores",
     "list_tournaments",
     "log_event",

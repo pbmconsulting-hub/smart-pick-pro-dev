@@ -42,8 +42,24 @@ def get_monthly_legends(month: int) -> list[dict]:
     return deepcopy(selected)
 
 
-def get_active_monthly_legends(as_of: date | datetime | None = None) -> list[dict]:
-    """Return monthly legends using today's month when not explicitly provided."""
-    current = as_of or datetime.utcnow()
-    month = current.month if isinstance(current, datetime) else int(current.month)
-    return get_monthly_legends(month)
+def get_legends_for_tier(month: int, *, has_legend_pass: bool = False, is_premium: bool = False) -> list[dict]:
+    """Return the legends a user can access based on their subscription tier.
+
+    Legend Pass gate logic (Section III of the master plan):
+      - Free users: no legends (empty list)
+      - Premium ($9.99/mo) only: 3 cheapest legends that month
+      - Premium + Legend Pass ($14.98/mo total): all 8 available that month
+
+    January = all 20 available regardless (holiday bonus).
+    """
+    if not is_premium:
+        return []
+
+    monthly = get_monthly_legends(month)
+
+    if has_legend_pass:
+        return monthly
+
+    # Premium-only: 3 cheapest legends
+    sorted_by_salary = sorted(monthly, key=lambda l: (l.get("salary", 0), l.get("player_id", "")))
+    return deepcopy(sorted_by_salary[:3])

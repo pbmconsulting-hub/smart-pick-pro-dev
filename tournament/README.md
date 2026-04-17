@@ -1,6 +1,6 @@
-# 🏟️ Tournament System (Phase 0)
+# 🏟️ Tournament System
 
-**Isolated tournament environment for Smart Pick Pro.** NBA-first, sports-agnostic design. No conflicts with main app.
+**Isolated tournament environment for Smart Pick Pro.** Sports-agnostic design with active NBA, MLB, and NFL routing support.
 
 ## Structure
 
@@ -17,7 +17,9 @@ tournament/
 ├── data/                            # Data & legends
 ├── db/                              # Database schema & migrations
 ├── sports/                          # Sport-specific logic
-│   └── nba.py                       # NBA tournament implementation
+│   ├── nba.py                       # NBA adapter
+│   ├── mlb.py                       # MLB adapter
+│   └── nfl.py                       # NFL adapter
 ├── tests/                           # Unit tests
 └── scripts/                         # Bootstrap & setup scripts
 ```
@@ -48,7 +50,7 @@ python scripts/bootstrap_tournament.py
 ## Design Principles
 
 - **Isolated**: Own `.venv`, own `requirements.txt` — zero conflicts with main app
-- **Modular**: Sports-agnostic. NBA → MLB/NFL/MLS later
+- **Modular**: Sports-agnostic. NBA, MLB, and NFL are currently routed through the same tournament engine
 - **Wrapper-Based**: Calls parent app's `engine/simulation.py` and `engine/game_prediction.py` — no reimplementation
 - **Deterministic**: Outcome seeding for fairness & verifiability
 - **Stripe-Native**: Entry fees, payouts, 1099s handled directly
@@ -84,7 +86,7 @@ from data.data_manager import load_players_data
 - **Phase 1**: Streamlit UI (pages 16–19)
 - **Phase 2**: Stripe integration, payouts, premium tiers
 - **Phase 3**: Championship system, badges, LP rankings
-- **Phase 4**: Multi-sport expansion (MLB, NFL, MLS, etc.)
+- **Phase 4**: Expand beyond the current NBA/MLB/NFL router coverage
 
 ## Environment Variables
 
