@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from datetime import date, datetime
 
 LEGEND_PROFILES = [
     {"player_id": "L001", "player_name": "Michael Jordan", "position": "SG", "legend_era": "90s", "overall_rating": 99, "salary": 15000, "archetype": "Elite Scorer"},

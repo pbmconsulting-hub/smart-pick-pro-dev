@@ -28,6 +28,7 @@ from manager import (
     list_career_leaderboard,
     list_user_entries,
 )
+from legal import get_dfs_disclaimer_markdown
 
 
 def _resolve_user_email() -> str:
@@ -574,3 +575,6 @@ with col2:
 with col3:
     if st.button("📜 Record Books →", use_container_width=True):
         st.switch_page("pages/20_📜_Record_Books.py")
+
+st.markdown("---")
+st.markdown(get_dfs_disclaimer_markdown())

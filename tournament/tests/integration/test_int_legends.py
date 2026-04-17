@@ -1,6 +1,8 @@
 """Integration tests for tournament.legends — static legend pool."""
 
-from tournament.legends import LEGEND_PROFILES, get_monthly_legends
+from datetime import date
+
+from tournament.legends import LEGEND_PROFILES, get_active_monthly_legends, get_monthly_legends
 
 
 class TestLegendProfiles:
@@ -47,3 +49,7 @@ class TestGetMonthlyLegends:
         legends[0]["player_name"] = "MODIFIED"
         fresh = get_monthly_legends(3)
         assert fresh[0]["player_name"] != "MODIFIED"
+
+    def test_get_active_monthly_legends_uses_date(self):
+        legends = get_active_monthly_legends(date(2026, 1, 5))
+        assert len(legends) == 20
