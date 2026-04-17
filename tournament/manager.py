@@ -405,8 +405,8 @@ def list_user_entries(user_email: str, limit: int = 100) -> list[dict]:
 def get_user_head_to_head(user_email: str, limit: int = 20) -> list[dict]:
     """Return head-to-head matchup aggregates versus opponents in shared tournaments."""
     tournament_db.initialize_tournament_database()
-    email = str(user_email or "").strip().lower()
-    if not email:
+    normalized_email = str(user_email or "").strip().lower()
+    if not normalized_email:
         return []
 
     with tournament_db.get_tournament_connection() as conn:
@@ -433,7 +433,7 @@ def get_user_head_to_head(user_email: str, limit: int = 20) -> list[dict]:
             ORDER BY matchups DESC, wins DESC, your_avg_score DESC
             LIMIT ?
             """,
-            (email, max(1, int(limit))),
+            (normalized_email, max(1, int(limit))),
         ).fetchall()
 
     out: list[dict] = []
@@ -501,8 +501,8 @@ def get_user_best_rosters(user_email: str, limit: int = 5) -> dict:
 def get_user_progression_snapshot(user_email: str, limit: int = 40) -> dict:
     """Return rank/score progression and derived skill percentiles for profile visualizations."""
     tournament_db.initialize_tournament_database()
-    email = str(user_email or "").strip().lower()
-    if not email:
+    normalized_email = str(user_email or "").strip().lower()
+    if not normalized_email:
         return {
             "series": [],
             "global_rank": 0,
@@ -526,7 +526,7 @@ def get_user_progression_snapshot(user_email: str, limit: int = 40) -> dict:
             ORDER BY e.created_at ASC, e.entry_id ASC
             LIMIT ?
             """,
-            (email, max(1, int(limit))),
+            (normalized_email, max(1, int(limit))),
         ).fetchall()
 
     series: list[dict] = []
@@ -549,9 +549,9 @@ def get_user_progression_snapshot(user_email: str, limit: int = 40) -> dict:
             }
         )
 
-    career = get_user_career_stats(email)
+    career = get_user_career_stats(normalized_email)
     board = list_career_leaderboard(limit=1000)
-    global_rank = next((int(r.get("rank", 0) or 0) for r in board if str(r.get("user_email", "")).strip().lower() == email), 0)
+    global_rank = next((int(r.get("rank", 0) or 0) for r in board if str(r.get("user_email", "")).strip().lower() == normalized_email), 0)
 
     lifetime_entries = max(1, int(career.get("lifetime_entries", 0) or 0))
     lifetime_wins = int(career.get("lifetime_wins", 0) or 0)

@@ -21,7 +21,7 @@ def _new_code(length: int = 8) -> str:
 
 def _default_display_name(email: str) -> str:
     local = _normalize_email(email).split("@")[0] or "user"
-    digest = hashlib.sha1(_normalize_email(email).encode("utf-8")).hexdigest()[:4]
+    digest = hashlib.sha256(_normalize_email(email).encode("utf-8")).hexdigest()[:4]
     return f"{local[:15]}{digest}"[:20]
 
 

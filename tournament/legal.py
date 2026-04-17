@@ -8,8 +8,8 @@ DFS_DISCLAIMER_LINES = [
     "If you or someone you know has a gambling problem, call 1-800-GAMBLER.",
 ]
 
-TERMS_PAGE_PATH = "pages/21_📄_Terms_of_Service.py"
-PRIVACY_PAGE_PATH = "pages/22_🔒_Privacy_Policy.py"
+TERMS_PAGE_PATH = "/Terms_of_Service"
+PRIVACY_PAGE_PATH = "/Privacy_Policy"
 
 
 def get_dfs_disclaimer_markdown() -> str:
