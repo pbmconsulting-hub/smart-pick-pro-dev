@@ -14,7 +14,7 @@
 | **Phase 1** | Integration tests + wire UI to real backends | 🔜 Next |
 | **Phase 2** | Stripe payment flow + subscription management | Planned |
 | **Phase 3** | Championship system, badges, LP leaderboard | Planned |
-| **Phase 4** | Multi-sport expansion | Planned |
+| **Phase 4** | Multi-sport expansion | 🚧 4A in progress |
 
 ---
 
@@ -151,10 +151,10 @@ Current tests use **mock classes** in `tests/conftest.py`. Phase 1A writes integ
 
 | Task | Description |
 |------|-------------|
-| `sports/nba.py` | NBA-specific scoring, stat mapping, season schedule |
-| `sports/mlb.py` | MLB scoring (pitcher/hitter splits), stat mapping |
-| `sports/nfl.py` | NFL scoring (QB/RB/WR/TE), weekly tournaments |
-| Sport selector | Tournament creation specifies sport, routes to correct scoring engine |
+| `sports/nba.py` | ✅ NBA-specific scoring and stat mapping |
+| `sports/mlb.py` | ✅ Initial MLB stat mapping + scoring adapter |
+| `sports/nfl.py` | ✅ Initial NFL stat mapping + scoring adapter |
+| Sport selector | ✅ Tournament creation + resolution route through the sport handler |
 
 ---
 

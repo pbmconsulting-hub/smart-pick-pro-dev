@@ -1,4 +1,4 @@
-"""Standalone Stripe handlers for tournament entry, refund, and payouts."""
+"""Standalone Stripe handlers for tournament entry, refund, payouts, and subscriptions."""
 
 from __future__ import annotations
 
@@ -12,6 +12,8 @@ except ImportError:
     _STRIPE_AVAILABLE = False
 
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
+STRIPE_LEGEND_PASS_PRICE_ID = os.environ.get("STRIPE_LEGEND_PASS_PRICE_ID", "")
+STRIPE_PREMIUM_PRICE_ID = os.environ.get("STRIPE_PREMIUM_PRICE_ID", "")
 APP_URL = os.environ.get("APP_URL", "http://localhost:8501").rstrip("/")
 
 
@@ -292,5 +294,180 @@ def get_connect_account_status(connect_account_id: str) -> dict:
             "payouts_enabled": False,
             "charges_enabled": False,
             "requirements": {},
+            "error": str(exc),
+        }
+
+
+# ── Subscription checkout helpers ─────────────────────────────────────
+
+
+def create_legend_pass_checkout_session(
+    customer_email: str = "",
+    success_path: str = "/",
+    cancel_path: str = "/",
+) -> dict:
+    """Create a Stripe Checkout session for the Legend Pass subscription ($4.99/mo).
+
+    Requires ``STRIPE_LEGEND_PASS_PRICE_ID`` to be set in the environment.
+    """
+    price_id = STRIPE_LEGEND_PASS_PRICE_ID
+    if not price_id:
+        return {
+            "success": False,
+            "url": "",
+            "session_id": "",
+            "error": "STRIPE_LEGEND_PASS_PRICE_ID is not configured",
+        }
+    return _create_subscription_checkout(
+        price_id=price_id,
+        customer_email=customer_email,
+        success_path=success_path,
+        cancel_path=cancel_path,
+        metadata_type="legend_pass_subscription",
+        product_label="Legend Pass",
+    )
+
+
+def create_premium_checkout_session(
+    customer_email: str = "",
+    success_path: str = "/",
+    cancel_path: str = "/",
+) -> dict:
+    """Create a Stripe Checkout session for the Premium subscription ($9.99/mo).
+
+    Requires ``STRIPE_PREMIUM_PRICE_ID`` to be set in the environment.
+    """
+    price_id = STRIPE_PREMIUM_PRICE_ID
+    if not price_id:
+        return {
+            "success": False,
+            "url": "",
+            "session_id": "",
+            "error": "STRIPE_PREMIUM_PRICE_ID is not configured",
+        }
+    return _create_subscription_checkout(
+        price_id=price_id,
+        customer_email=customer_email,
+        success_path=success_path,
+        cancel_path=cancel_path,
+        metadata_type="premium_subscription",
+        product_label="Premium",
+    )
+
+
+def _create_subscription_checkout(
+    *,
+    price_id: str,
+    customer_email: str,
+    success_path: str,
+    cancel_path: str,
+    metadata_type: str,
+    product_label: str,
+) -> dict:
+    """Shared helper to create a recurring-mode Stripe Checkout session."""
+    if not _configure_stripe():
+        return {
+            "success": False,
+            "url": "",
+            "session_id": "",
+            "error": "Stripe is not configured",
+        }
+
+    try:
+        success_url = f"{APP_URL}{success_path}?session_id={{CHECKOUT_SESSION_ID}}"
+        cancel_url = f"{APP_URL}{cancel_path}?cancelled=true"
+
+        params: dict = {
+            "mode": "subscription",
+            "line_items": [{"price": price_id, "quantity": 1}],
+            "success_url": success_url,
+            "cancel_url": cancel_url,
+            "metadata": {"type": metadata_type},
+        }
+        email = str(customer_email or "").strip().lower()
+        if email:
+            params["customer_email"] = email
+            params["metadata"]["customer_email"] = email
+
+        session = _stripe.checkout.Session.create(**params)
+        return {
+            "success": True,
+            "url": session.url,
+            "session_id": session.id,
+            "error": "",
+        }
+    except Exception as exc:
+        return {
+            "success": False,
+            "url": "",
+            "session_id": "",
+            "error": str(exc),
+        }
+
+
+def get_subscription_details(subscription_id: str) -> dict:
+    """Retrieve a Stripe Subscription object and return normalized status."""
+    if not _configure_stripe():
+        return {
+            "success": False,
+            "subscription_id": "",
+            "status": "",
+            "product_type": "",
+            "customer_email": "",
+            "current_period_end": "",
+            "error": "Stripe is not configured",
+        }
+
+    sub_id = str(subscription_id or "").strip()
+    if not sub_id:
+        return {
+            "success": False,
+            "subscription_id": "",
+            "status": "",
+            "product_type": "",
+            "customer_email": "",
+            "current_period_end": "",
+            "error": "subscription_id is required",
+        }
+
+    try:
+        subscription = _stripe.Subscription.retrieve(sub_id, expand=["customer"])
+        status = str(subscription.get("status", "")).strip()
+
+        customer = subscription.get("customer") or {}
+        if isinstance(customer, str):
+            customer_email = ""
+        else:
+            customer_email = str(customer.get("email", "") or "").strip().lower()
+
+        metadata = dict(subscription.get("metadata") or {})
+        product_type = str(metadata.get("type", "")).strip()
+
+        current_period_end = ""
+        raw_end = subscription.get("current_period_end")
+        if raw_end:
+            try:
+                from datetime import datetime, timezone
+                current_period_end = datetime.fromtimestamp(int(raw_end), tz=timezone.utc).isoformat()
+            except Exception:
+                current_period_end = str(raw_end)
+
+        return {
+            "success": True,
+            "subscription_id": str(subscription.get("id", sub_id)),
+            "status": status,
+            "product_type": product_type,
+            "customer_email": customer_email,
+            "current_period_end": current_period_end,
+            "error": "",
+        }
+    except Exception as exc:
+        return {
+            "success": False,
+            "subscription_id": sub_id,
+            "status": "",
+            "product_type": "",
+            "customer_email": "",
+            "current_period_end": "",
             "error": str(exc),
         }
