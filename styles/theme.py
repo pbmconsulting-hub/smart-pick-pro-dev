@@ -252,32 +252,34 @@ def get_global_css():
     Returns:
         str: Full <style>...</style> block ready for st.markdown()
     """
-    return """
+    _base = """
 <style>
 /* ─── Google Fonts ────────────────────────────────────────── */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&family=Orbitron:wght@400;700;800;900&family=Montserrat:wght@400;600;700&display=swap');
 
 /* ─── Keyframe Animations ─────────────────────────────────── */
 @keyframes borderGlow {
-    0%, 100% { box-shadow: 0 0 12px rgba(0,240,255,0.15),
-                            0 4px 24px rgba(0,240,255,0.07); }
-    50%       { box-shadow: 0 0 28px rgba(0,240,255,0.35),
-                            0 4px 30px rgba(0,240,255,0.15); }
+    0%, 100% { box-shadow: 0 0 15px rgba(0,229,255,0.12),
+                            0 4px 30px rgba(0,229,255,0.06),
+                            inset 0 0 20px rgba(0,229,255,0.03); }
+    50%       { box-shadow: 0 0 30px rgba(0,229,255,0.25),
+                            0 4px 40px rgba(0,229,255,0.12),
+                            inset 0 0 30px rgba(0,229,255,0.05); }
 }
 @keyframes pulse-platinum {
-    0%, 100% { box-shadow: 0 0 10px rgba(0,240,255,0.30); }
-    50%       { box-shadow: 0 0 24px rgba(0,240,255,0.60); }
+    0%, 100% { box-shadow: 0 0 12px rgba(0,229,255,0.25), 0 0 40px rgba(0,229,255,0.08); }
+    50%       { box-shadow: 0 0 28px rgba(0,229,255,0.50), 0 0 60px rgba(0,229,255,0.15); }
 }
 @keyframes pulse-gold {
-    0%, 100% { box-shadow: 0 0 10px rgba(255,94,0,0.35); }
-    50%       { box-shadow: 0 0 24px rgba(255,94,0,0.65); }
+    0%, 100% { box-shadow: 0 0 12px rgba(255,170,0,0.30), 0 0 40px rgba(255,170,0,0.08); }
+    50%       { box-shadow: 0 0 28px rgba(255,170,0,0.55), 0 0 60px rgba(255,170,0,0.15); }
 }
 @keyframes live-dot-pulse {
     0%, 100% { opacity: 1; transform: scale(1); }
     50%       { opacity: 0.4; transform: scale(1.35); }
 }
 @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(10px); }
+    from { opacity: 0; transform: translateY(12px); }
     to   { opacity: 1; transform: translateY(0); }
 }
 @keyframes headerShimmer {
@@ -298,6 +300,36 @@ def get_global_css():
 @keyframes ssFadeInUp {
     from { opacity: 0; transform: translateY(16px); }
     to   { opacity: 1; transform: translateY(0); }
+}
+/* ── Premium Mesh Gradient Drift ───────────────────────────── */
+@keyframes meshDrift {
+    0%   { background-position: 0% 0%; }
+    25%  { background-position: 50% 100%; }
+    50%  { background-position: 100% 50%; }
+    75%  { background-position: 50% 0%; }
+    100% { background-position: 0% 0%; }
+}
+/* ── Subtle Card Shine Sweep ────────────────────────────────── */
+@keyframes cardShineSweep {
+    0%   { left: -100%; opacity: 0; }
+    50%  { opacity: 1; }
+    100% { left: 200%; opacity: 0; }
+}
+/* ── Gentle Float ───────────────────────────────────────────── */
+@keyframes gentleFloat {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-4px); }
+}
+/* ── Aurora Ribbon ──────────────────────────────────────────── */
+@keyframes auroraShift {
+    0%   { background-position: 0% 50%; filter: hue-rotate(0deg); }
+    50%  { background-position: 100% 50%; filter: hue-rotate(15deg); }
+    100% { background-position: 0% 50%; filter: hue-rotate(0deg); }
+}
+/* ── Organic Glow Pulse ─────────────────────────────────────── */
+@keyframes organicGlow {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50%      { opacity: 0.7; transform: scale(1.05); }
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -363,22 +395,39 @@ footer { display: none !important; }
 html, body, [class*="css"] {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     font-size: 16px;
-    color: #c8d8f0;
-    background-color: #070A13;
+    color: #dce4f0;
+    background-color: #06090F;
 }
-/* Deep obsidian background with radial gradient */
+/* Deep obsidian background with animated mesh gradient */
 .stApp {
-    background-color: #070A13;
+    background-color: #06090F;
     background-image:
-        radial-gradient(ellipse at 20% 20%, rgba(0,240,255,0.04) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 80%, rgba(200,0,255,0.03) 0%, transparent 50%),
-        radial-gradient(ellipse at center, #0d1220 0%, #070A13 100%);
+        radial-gradient(ellipse at 15% 10%, rgba(0,229,255,0.06) 0%, transparent 45%),
+        radial-gradient(ellipse at 85% 15%, rgba(120,0,255,0.04) 0%, transparent 40%),
+        radial-gradient(ellipse at 50% 85%, rgba(0,255,157,0.03) 0%, transparent 45%),
+        radial-gradient(ellipse at 75% 50%, rgba(255,94,0,0.025) 0%, transparent 35%),
+        radial-gradient(ellipse at center, #0a0f1a 0%, #06090F 100%);
+    background-size: 200% 200%;
+    animation: meshDrift 45s ease infinite;
 }
-/* Override stAppViewContainer for institutional dark gradient */
+/* Noise texture overlay for organic depth */
+.stApp::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 256px 256px;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.6;
+    mix-blend-mode: overlay;
+}
+/* Override stAppViewContainer for layered dark gradient */
 [data-testid="stAppViewContainer"] {
-    background: radial-gradient(ellipse at 30% 10%, rgba(0,240,255,0.03) 0%, transparent 45%),
-                radial-gradient(ellipse at 70% 90%, rgba(200,0,255,0.025) 0%, transparent 50%),
-                radial-gradient(ellipse at center, #0a0e18 0%, #070A13 100%);
+    background: radial-gradient(ellipse at 25% 8%, rgba(0,229,255,0.04) 0%, transparent 40%),
+                radial-gradient(ellipse at 75% 92%, rgba(120,0,255,0.03) 0%, transparent 45%),
+                radial-gradient(ellipse at center, #080d18 0%, #06090F 100%);
 }
 
 /* All JetBrains Mono / monospace text gets tabular-nums for alignment */
@@ -411,24 +460,50 @@ code, pre, .monospace {
 [data-testid="stMarkdownContainer"] h6,
 .stHeadingWithActionElements,
 h1, h2, h3, h4, h5, h6 {
-    color: #00f0ff !important;
     font-family: 'Orbitron', sans-serif !important;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.06em;
+    background: linear-gradient(135deg, #00e5ff 0%, #00ffb7 40%, #00e5ff 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    filter: drop-shadow(0 0 18px rgba(0,229,255,0.35));
+}
+/* Ensure <h1> is extra bold + prominent */
+[data-testid="stMarkdownContainer"] h1, h1 {
+    font-weight: 900 !important;
+    font-size: 1.85rem !important;
+    letter-spacing: 0.08em;
+}
+[data-testid="stMarkdownContainer"] h2, h2 {
+    font-weight: 800 !important;
+    font-size: 1.45rem !important;
+}
+[data-testid="stMarkdownContainer"] h3, h3 {
+    font-weight: 700 !important;
+    font-size: 1.15rem !important;
 }
 
-/* Custom scrollbar — ultra-thin dark track, cyan thumb */
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: rgba(7,10,19,0.9); }
-::-webkit-scrollbar-thumb { background: rgba(0,240,255,0.30); border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(0,240,255,0.55); }
+/* Custom scrollbar — ultra-thin dark track, accent thumb */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: rgba(6,9,15,0.95); }
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(0,229,255,0.35), rgba(0,255,157,0.20));
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(0,229,255,0.60), rgba(0,255,157,0.40));
+}
 
-/* ─── Sidebar — enhanced dark panel with neon border ─────── */
+/* ─── Sidebar — premium dark glass panel ─────────────────── */
 /* min-width: 280px ensures emoji + full page titles are always readable */
 [data-testid="stSidebar"] {
-    background: #060910 !important;
-    border-right: 1px solid rgba(0,240,255,0.20) !important;
-    box-shadow: 2px 0 20px rgba(0,240,255,0.05) !important;
+    background: linear-gradient(180deg, rgba(8,12,22,0.98) 0%, rgba(6,9,15,0.99) 100%) !important;
+    border-right: 1px solid rgba(0,229,255,0.12) !important;
+    box-shadow: 2px 0 30px rgba(0,0,0,0.5),
+                1px 0 0 rgba(0,229,255,0.06) inset !important;
     min-width: 280px !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
 }
 [data-testid="stSidebar"] p,
 [data-testid="stSidebar"] span,
@@ -454,13 +529,16 @@ h1, h2, h3, h4, h5, h6 {
     padding: 0 20px;
     box-sizing: border-box;
     text-align: center;
-    font-size: 0.68rem;
+    font-size: 0.66rem;
     font-family: 'JetBrains Mono', 'Courier New', monospace;
     font-weight: 700;
-    color: rgba(0,240,255,0.70) !important;
-    letter-spacing: 0.08em;
+    background: linear-gradient(90deg, rgba(0,229,255,0.70), rgba(0,255,157,0.55)) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    letter-spacing: 0.10em;
     pointer-events: none;
-    text-shadow: 0 0 8px rgba(0,240,255,0.5);
+    filter: drop-shadow(0 0 6px rgba(0,229,255,0.4));
 }
 
 /* ─── Sidebar Logo — removed per branding directive ──────── */
@@ -471,28 +549,40 @@ h1, h2, h3, h4, h5, h6 {
 /* ─── Streamlit native elements on dark bg ───────────────── */
 /* Metric glassmorphic card treatment */
 [data-testid="stMetric"] {
-    background: rgba(15,23,42,0.55);
-    border: 1px solid rgba(255,255,255,0.05);
-    border-radius: 14px;
-    padding: 18px 20px;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    box-shadow: 0 0 20px rgba(0,240,255,0.04), 0 4px 20px rgba(0,0,0,0.30);
-    transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+    background: linear-gradient(145deg, rgba(12,18,33,0.70), rgba(8,12,24,0.85));
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px;
+    padding: 20px 22px;
+    backdrop-filter: blur(16px) saturate(1.3);
+    -webkit-backdrop-filter: blur(16px) saturate(1.3);
+    box-shadow: 0 0 0 1px rgba(0,229,255,0.04) inset,
+                0 2px 24px rgba(0,0,0,0.35),
+                0 0 20px rgba(0,229,255,0.03);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94);
+    position: relative;
+    overflow: hidden;
+}
+[data-testid="stMetric"]::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0,229,255,0.25), rgba(0,255,157,0.15), transparent);
 }
 [data-testid="stMetric"]:hover {
-    border-color: rgba(0,240,255,0.20);
-    box-shadow: 0 0 28px rgba(0,240,255,0.10), 0 6px 24px rgba(0,0,0,0.40);
-    transform: translateY(-3px);
+    border-color: rgba(0,229,255,0.18);
+    box-shadow: 0 0 0 1px rgba(0,229,255,0.08) inset,
+                0 8px 32px rgba(0,0,0,0.45),
+                0 0 30px rgba(0,229,255,0.08);
+    transform: translateY(-4px);
 }
-[data-testid="stMetricValue"] { color: rgba(255,255,255,0.95) !important; font-size: 1.4rem !important; font-family: 'JetBrains Mono', 'Courier New', monospace !important; font-variant-numeric: tabular-nums !important; }
-[data-testid="stMetricLabel"] { color: #94A3B8 !important; font-size: 0.82rem !important; text-transform: uppercase; letter-spacing: 0.08em; font-family: 'Inter', sans-serif !important; }
+[data-testid="stMetricValue"] { color: rgba(255,255,255,0.97) !important; font-size: 1.5rem !important; font-family: 'JetBrains Mono', 'Courier New', monospace !important; font-variant-numeric: tabular-nums !important; font-weight: 800 !important; }
+[data-testid="stMetricLabel"] { color: #8896B0 !important; font-size: 0.78rem !important; text-transform: uppercase; letter-spacing: 0.10em; font-family: 'Inter', sans-serif !important; font-weight: 600 !important; }
 [data-testid="stMetricDelta"] { font-family: 'JetBrains Mono', monospace !important; font-variant-numeric: tabular-nums !important; }
 
 /* ═══════════════════════════════════════════════════════════
    PILLAR 2 — Terminal-Style Alert Overrides
    ═══════════════════════════════════════════════════════════ */
-.stAlert { background: rgba(15,23,42,0.90) !important; border-radius: 8px !important; border: none !important; color: #e0eeff !important; font-size: 0.95rem !important; padding: 14px 18px !important; backdrop-filter: blur(8px) !important; -webkit-backdrop-filter: blur(8px) !important; }
+.stAlert { background: linear-gradient(135deg, rgba(12,18,33,0.92), rgba(8,14,28,0.88)) !important; border-radius: 12px !important; border: none !important; color: #e4eeff !important; font-size: 0.95rem !important; padding: 16px 20px !important; backdrop-filter: blur(12px) !important; -webkit-backdrop-filter: blur(12px) !important; box-shadow: 0 2px 16px rgba(0,0,0,0.25) !important; }
 /* st.error → red neon left-border */
 [data-testid="stAlert"][data-baseweb*="negative"],
 div[data-testid="stNotification"][data-type="error"],
@@ -535,8 +625,8 @@ div[data-testid="stNotification"][data-type="info"] {
 .ss-fade-in-up {
     animation: ssFadeInUp 0.4s ease both;
 }
-.stExpander { background: rgba(13,18,32,0.80) !important; border: 1px solid rgba(0,240,255,0.15) !important; border-radius: 12px !important; }
-.stExpander summary, .stExpander [data-testid="stExpanderToggleIcon"] + span { color: #e0eeff !important; font-size: 1rem !important; font-weight: 600 !important; }
+.stExpander { background: linear-gradient(135deg, rgba(10,15,28,0.85), rgba(8,12,24,0.80)) !important; border: 1px solid rgba(0,229,255,0.10) !important; border-radius: 14px !important; box-shadow: 0 2px 16px rgba(0,0,0,0.20) !important; }
+.stExpander summary, .stExpander [data-testid="stExpanderToggleIcon"] + span { color: #e4eeff !important; font-size: 1rem !important; font-weight: 600 !important; }
 /* Ensure expander content area never clips iframes or expanded cards.
    Without this, some Streamlit versions apply overflow:hidden on the
    details content wrapper, which clips self-resizing iframes that
@@ -548,42 +638,60 @@ div[data-testid="stNotification"][data-type="info"] {
     max-height: none !important;
 }
 button[kind="primary"] {
-    background: linear-gradient(135deg, #00ffd5, #00b4ff) !important;
-    color: #070A13 !important;
+    background: linear-gradient(135deg, #00e5ff, #00ffb7, #00c8ff) !important;
+    background-size: 200% 200% !important;
+    animation: headerShimmer 3s ease infinite !important;
+    color: #060a12 !important;
     border: none !important;
     font-family: 'Inter', sans-serif !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.04em !important;
-    box-shadow: 0 0 16px rgba(0,255,213,0.30) !important;
-    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.05em !important;
+    border-radius: 10px !important;
+    box-shadow: 0 0 20px rgba(0,229,255,0.30),
+                0 4px 16px rgba(0,229,255,0.15),
+                inset 0 1px 0 rgba(255,255,255,0.15) !important;
+    transition: transform 0.25s cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 0.25s ease !important;
 }
 button[kind="primary"]:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 0 28px rgba(0,255,213,0.50), 0 6px 20px rgba(0,0,0,0.4) !important;
+    transform: translateY(-3px) scale(1.01) !important;
+    box-shadow: 0 0 40px rgba(0,229,255,0.45),
+                0 8px 28px rgba(0,229,255,0.20),
+                inset 0 1px 0 rgba(255,255,255,0.20) !important;
 }
-/* Secondary / default buttons — tactile hover */
+button[kind="primary"]:active {
+    transform: translateY(-1px) scale(0.99) !important;
+}
+/* Secondary / default buttons — premium hover */
 .stButton > button {
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
+    transition: transform 0.25s cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 0.25s ease, border-color 0.25s ease !important;
+    border-radius: 10px !important;
 }
 .stButton > button:hover {
     transform: translateY(-2px) !important;
-    box-shadow: 0 4px 20px rgba(0,240,255,0.15) !important;
+    box-shadow: 0 6px 24px rgba(0,229,255,0.12), 0 2px 8px rgba(0,0,0,0.3) !important;
 }
 /* Tab labels */
 [data-testid="stTab"] button {
     font-size: 1rem !important;
     font-weight: 600 !important;
-    color: #c8d8f0 !important;
+    color: #8896B0 !important;
+    transition: color 0.2s ease, border-color 0.2s ease !important;
+    letter-spacing: 0.02em !important;
 }
 [data-testid="stTab"] button[aria-selected="true"] {
-    color: #00f0ff !important;
-    border-bottom: 2px solid #00f0ff !important;
+    color: #00e5ff !important;
+    border-bottom: 2px solid #00e5ff !important;
+    text-shadow: 0 0 12px rgba(0,229,255,0.30) !important;
+}
+[data-testid="stTab"] button:hover:not([aria-selected="true"]) {
+    color: #c0d0e8 !important;
 }
 /* Dataframe / table text — terminal look */
 [data-testid="stDataFrame"] {
-    border: none !important;
-    border-radius: 12px !important;
+    border: 1px solid rgba(0,229,255,0.06) !important;
+    border-radius: 14px !important;
     overflow: hidden !important;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.25) !important;
 }
 [data-testid="stDataFrame"] td {
     font-size: 0.92rem !important;
@@ -848,76 +956,112 @@ button[kind="primary"]:hover {
 
 /* ─── Analysis Card (smartai-card) ───────────────────────── */
 .smartai-card {
-    background: rgba(13,18,32,0.85);
-    border: 1px solid rgba(0,240,255,0.15);
-    border-radius: 16px;
-    padding: 20px 24px;
+    background: linear-gradient(145deg, rgba(12,18,33,0.88), rgba(8,14,28,0.92));
+    border: 1px solid rgba(0,229,255,0.10);
+    border-radius: 18px;
+    padding: 22px 26px;
     margin-bottom: 18px;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    box-shadow: 0 0 20px rgba(0,240,255,0.08), 0 4px 24px rgba(0,0,0,0.4);
-    animation: borderGlow 3.5s ease-in-out infinite,
-               fadeInUp 0.35s ease both;
-    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    box-shadow: 0 0 0 1px rgba(0,229,255,0.04) inset,
+                0 0 24px rgba(0,229,255,0.06),
+                0 8px 32px rgba(0,0,0,0.40),
+                0 1px 0 rgba(255,255,255,0.03) inset;
+    animation: borderGlow 4s ease-in-out infinite,
+               fadeInUp 0.4s ease both;
+    transition: border-color 0.3s ease, transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 0.3s ease;
     position: relative;
     overflow: hidden;
 }
 .smartai-card::before {
     content: '';
     position: absolute;
-    top: 0; left: 0; right: 0; height: 3px;
-    background: linear-gradient(90deg, #00f0ff, #00ff9d, #ff5e00, #c800ff, #00f0ff);
+    top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, #00e5ff, #00ffb7, #ff5e00, #b44dff, #00e5ff);
     background-size: 200% 100%;
-    animation: headerShimmer 4s ease infinite;
-    opacity: 0.9;
+    animation: auroraShift 6s ease infinite;
+    opacity: 0.85;
+}
+.smartai-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%; width: 50%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.02), transparent);
+    transition: none;
+    pointer-events: none;
+}
+.smartai-card:hover::after {
+    animation: cardShineSweep 0.8s ease forwards;
 }
 .smartai-card:hover {
-    border-color: rgba(0,240,255,0.40);
-    transform: translateY(-5px);
-    box-shadow: 0 0 30px rgba(0,240,255,0.20), 0 8px 32px rgba(0,0,0,0.5);
+    border-color: rgba(0,229,255,0.30);
+    transform: translateY(-6px);
+    box-shadow: 0 0 0 1px rgba(0,229,255,0.08) inset,
+                0 0 40px rgba(0,229,255,0.15),
+                0 12px 40px rgba(0,0,0,0.50),
+                0 1px 0 rgba(255,255,255,0.04) inset;
 }
 
 /* ─── Neural Header ───────────────────────────────────────── */
 .neural-header {
-    background: linear-gradient(135deg, #070A13 0%, #0d1a2e 50%, #070A13 100%);
-    border: 1px solid rgba(0,240,255,0.30);
-    border-radius: 16px;
-    padding: 24px 30px;
-    margin-bottom: 20px;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: linear-gradient(145deg, rgba(6,9,15,0.95) 0%, rgba(12,18,33,0.85) 50%, rgba(6,9,15,0.95) 100%);
+    border: 1px solid rgba(0,229,255,0.15);
+    border-radius: 20px;
+    padding: 28px 34px;
+    margin-bottom: 24px;
+    backdrop-filter: blur(20px) saturate(1.3);
+    -webkit-backdrop-filter: blur(20px) saturate(1.3);
     position: relative;
     overflow: hidden;
     text-align: center;
-    box-shadow: 0 0 30px rgba(0,240,255,0.12), 0 4px 24px rgba(0,0,0,0.5);
+    box-shadow: 0 0 0 1px rgba(0,229,255,0.05) inset,
+                0 0 40px rgba(0,229,255,0.08),
+                0 8px 32px rgba(0,0,0,0.50);
 }
 .neural-header::before {
     content: '';
     position: absolute;
-    top: 0; left: 0; right: 0; height: 3px;
-    background: linear-gradient(90deg, #00f0ff, #00ff9d, #ff5e00, #c800ff, #00f0ff);
+    top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, #00e5ff, #00ffb7, #ff5e00, #b44dff, #00e5ff);
     background-size: 200% 100%;
-    animation: headerShimmer 3s linear infinite;
+    animation: auroraShift 5s ease infinite;
+}
+/* Subtle noise overlay on header */
+.neural-header::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 128 128' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.02'/%3E%3C/svg%3E");
+    background-size: 128px 128px;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+    opacity: 0.5;
 }
 .neural-header-title {
-    font-size: 2rem;
+    font-size: 2.1rem;
     font-weight: 900;
     font-family: 'Orbitron', sans-serif;
-    background: linear-gradient(135deg, #00f0ff, #00ff9d);
+    background: linear-gradient(135deg, #00e5ff 0%, #00ffb7 50%, #00e5ff 100%);
+    background-size: 200% 200%;
+    animation: headerShimmer 4s ease infinite;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.06em;
     line-height: 1.15;
     text-shadow: none;
-    filter: drop-shadow(0 0 12px rgba(0,240,255,0.5));
+    filter: drop-shadow(0 0 16px rgba(0,229,255,0.45));
+    position: relative;
+    z-index: 1;
 }
 .neural-header-subtitle {
-    font-size: 0.88rem;
-    color: rgba(192,208,232,0.80);
-    margin-top: 6px;
+    font-size: 0.85rem;
+    color: rgba(136,150,176,0.85);
+    margin-top: 8px;
     font-family: 'JetBrains Mono', 'Courier New', monospace;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
+    position: relative;
+    z-index: 1;
 }
 .circuit-dot {
     display: inline-block;
@@ -1122,28 +1266,30 @@ button[kind="primary"]:hover {
 
 /* ─── Education Box ───────────────────────────────────────── */
 .education-box {
-    background: rgba(13,18,32,0.70);
-    border: 1px solid rgba(0,240,255,0.18);
-    border-radius: 12px;
-    padding: 14px 18px;
+    background: linear-gradient(145deg, rgba(10,15,28,0.75), rgba(8,12,24,0.70));
+    border: 1px solid rgba(0,229,255,0.10);
+    border-radius: 14px;
+    padding: 16px 20px;
     margin: 10px 0;
-    transition: background 0.2s ease;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    transition: background 0.25s ease, border-color 0.25s ease;
+    backdrop-filter: blur(12px) saturate(1.2);
+    -webkit-backdrop-filter: blur(12px) saturate(1.2);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.20);
 }
 .education-box:hover {
-    background: rgba(13,18,32,0.90);
+    background: linear-gradient(145deg, rgba(12,18,33,0.88), rgba(10,15,28,0.85));
+    border-color: rgba(0,229,255,0.18);
 }
 .education-box-title {
     font-size: 0.88rem;
     font-weight: 700;
-    color: #00f0ff;
+    color: #00e5ff;
     display: flex;
     align-items: center;
     gap: 7px;
     cursor: pointer;
     user-select: none;
-    text-shadow: 0 0 6px rgba(0,240,255,0.4);
+    text-shadow: 0 0 8px rgba(0,229,255,0.35);
 }
 .education-box-content {
     font-size: 0.84rem;
@@ -1350,53 +1496,78 @@ button[kind="primary"]:hover {
 
 /* ─── Summary Cards ───────────────────────────────────────── */
 .summary-card {
-    background: rgba(13,18,32,0.85);
-    border: 1px solid rgba(0,240,255,0.15);
-    border-radius: 12px;
-    padding: 16px 20px;
+    background: linear-gradient(145deg, rgba(12,18,33,0.88), rgba(8,14,28,0.92));
+    border: 1px solid rgba(0,229,255,0.08);
+    border-radius: 16px;
+    padding: 18px 22px;
     text-align: center;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    box-shadow: 0 0 18px rgba(0,240,255,0.07), 0 4px 16px rgba(0,0,0,0.4);
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    backdrop-filter: blur(16px) saturate(1.3);
+    -webkit-backdrop-filter: blur(16px) saturate(1.3);
+    box-shadow: 0 0 0 1px rgba(0,229,255,0.03) inset,
+                0 0 20px rgba(0,229,255,0.05),
+                0 4px 20px rgba(0,0,0,0.35);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94);
+    position: relative;
+    overflow: hidden;
+}
+.summary-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0,229,255,0.20), transparent);
 }
 .summary-card:hover {
-    border-color: rgba(0,240,255,0.35);
-    box-shadow: 0 0 28px rgba(0,240,255,0.18), 0 6px 24px rgba(0,0,0,0.5);
-    transform: translateY(-3px);
+    border-color: rgba(0,229,255,0.25);
+    box-shadow: 0 0 0 1px rgba(0,229,255,0.06) inset,
+                0 0 35px rgba(0,229,255,0.12),
+                0 8px 28px rgba(0,0,0,0.45);
+    transform: translateY(-4px);
 }
 .summary-value {
-    font-size: 2rem;
-    font-weight: 800;
-    color: rgba(255,255,255,0.95);
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: rgba(255,255,255,0.97);
     line-height: 1.1;
     font-family: 'JetBrains Mono', 'Courier New', monospace;
 }
 .summary-label {
-    font-size: 0.75rem;
-    color: #b0bec5;
+    font-size: 0.72rem;
+    color: #8896B0;
     text-transform: uppercase;
-    letter-spacing: 1.2px;
-    margin-top: 5px;
+    letter-spacing: 1.4px;
+    margin-top: 6px;
+    font-weight: 600;
 }
 
 /* ─── Best Bets Card ──────────────────────────────────────── */
 .best-bet-card {
-    background: rgba(13,18,32,0.85);
-    border: 1px solid rgba(0,240,255,0.18);
-    border-radius: 14px;
-    padding: 16px 20px;
-    margin-bottom: 10px;
+    background: linear-gradient(145deg, rgba(12,18,33,0.88), rgba(8,14,28,0.92));
+    border: 1px solid rgba(0,229,255,0.10);
+    border-radius: 16px;
+    padding: 18px 22px;
+    margin-bottom: 12px;
     position: relative;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    box-shadow: 0 0 16px rgba(0,240,255,0.06), 0 4px 16px rgba(0,0,0,0.4);
-    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    backdrop-filter: blur(16px) saturate(1.3);
+    -webkit-backdrop-filter: blur(16px) saturate(1.3);
+    box-shadow: 0 0 0 1px rgba(0,229,255,0.03) inset,
+                0 0 18px rgba(0,229,255,0.05),
+                0 4px 20px rgba(0,0,0,0.35);
+    transition: border-color 0.3s ease, transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 0.3s ease;
+    overflow: hidden;
+}
+.best-bet-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; bottom: 0; width: 2px;
+    background: linear-gradient(180deg, #00e5ff, #00ffb7, transparent);
+    opacity: 0.6;
 }
 .best-bet-card:hover {
-    border-color: rgba(0,240,255,0.40);
-    transform: translateX(3px);
-    box-shadow: 0 0 24px rgba(0,240,255,0.15), 0 6px 20px rgba(0,0,0,0.5);
+    border-color: rgba(0,229,255,0.25);
+    transform: translateX(4px) translateY(-2px);
+    box-shadow: 0 0 0 1px rgba(0,229,255,0.06) inset,
+                0 0 30px rgba(0,229,255,0.12),
+                0 8px 28px rgba(0,0,0,0.45);
 }
 .best-bet-rank {
     position: absolute;
@@ -1494,33 +1665,37 @@ button[kind="primary"]:hover {
 
 /* ─── Player Analysis Card ────────────────────────────────── */
 .player-analysis-card {
-    background: rgba(13,18,32,0.85);
-    border: 1px solid rgba(0,240,255,0.15);
-    border-radius: 16px;
-    padding: 20px 24px;
+    background: linear-gradient(145deg, rgba(12,18,33,0.88), rgba(8,14,28,0.92));
+    border: 1px solid rgba(0,229,255,0.10);
+    border-radius: 18px;
+    padding: 22px 26px;
     margin-bottom: 18px;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    box-shadow: 0 0 20px rgba(0,240,255,0.07), 0 4px 24px rgba(0,0,0,0.4);
-    animation: borderGlow 3.5s ease-in-out infinite,
-               fadeInUp 0.3s ease both;
-    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    box-shadow: 0 0 0 1px rgba(0,229,255,0.04) inset,
+                0 0 24px rgba(0,229,255,0.06),
+                0 8px 32px rgba(0,0,0,0.40);
+    animation: borderGlow 4s ease-in-out infinite,
+               fadeInUp 0.35s ease both;
+    transition: border-color 0.3s ease, transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 0.3s ease;
     position: relative;
     overflow: hidden;
 }
 .player-analysis-card::before {
     content: '';
     position: absolute;
-    top: 0; left: 0; right: 0; height: 3px;
-    background: linear-gradient(90deg, #00f0ff, #00ff9d, #ff5e00, #c800ff, #00f0ff);
+    top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, #00e5ff, #00ffb7, #ff5e00, #b44dff, #00e5ff);
     background-size: 200% 100%;
-    animation: headerShimmer 4s ease infinite;
-    opacity: 0.9;
+    animation: auroraShift 6s ease infinite;
+    opacity: 0.85;
 }
 .player-analysis-card:hover {
-    border-color: rgba(0,240,255,0.40);
-    transform: translateY(-5px);
-    box-shadow: 0 0 30px rgba(0,240,255,0.18), 0 8px 32px rgba(0,0,0,0.5);
+    border-color: rgba(0,229,255,0.30);
+    transform: translateY(-6px);
+    box-shadow: 0 0 0 1px rgba(0,229,255,0.08) inset,
+                0 0 40px rgba(0,229,255,0.15),
+                0 12px 40px rgba(0,0,0,0.50);
 }
 .add-to-slip-btn {
     background: linear-gradient(135deg, #ff5e00, #ff8c00);
@@ -1708,18 +1883,19 @@ button[kind="primary"]:hover {
 
 /* ─── Half-Court Arc Watermark ────────────────────────────── */
 /* Subtle basketball court arc on main content background     */
-.stApp::after {
+.stApp > div::after {
     content: '';
     display: block;
     position: fixed;
-    bottom: -120px;
-    right: -120px;
-    width: 360px;
-    height: 360px;
+    bottom: -140px;
+    right: -140px;
+    width: 400px;
+    height: 400px;
     border-radius: 50%;
-    border: 40px solid rgba(200,16,46,0.04);
+    border: 45px solid rgba(200,16,46,0.03);
     pointer-events: none;
     z-index: 0;
+    animation: organicGlow 12s ease-in-out infinite;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -1806,17 +1982,18 @@ button[kind="primary"]:hover {
 /* ─── Premium Metric Card ────────────────────────────────── */
 /* Usage: <div class="premium-metric-card">...</div>          */
 .premium-metric-card {
-    background: rgba(13,18,32,0.90);
-    border: 1px solid rgba(0,240,255,0.18);
-    border-radius: 16px;
-    padding: 22px 26px;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: linear-gradient(145deg, rgba(12,18,33,0.92), rgba(8,14,28,0.95));
+    border: 1px solid rgba(0,229,255,0.10);
+    border-radius: 18px;
+    padding: 24px 28px;
+    backdrop-filter: blur(20px) saturate(1.5);
+    -webkit-backdrop-filter: blur(20px) saturate(1.5);
     box-shadow:
-        0 0 0 1px rgba(0,240,255,0.06) inset,
-        0 0 24px rgba(0,240,255,0.10),
-        0 8px 32px rgba(0,0,0,0.45);
-    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+        0 0 0 1px rgba(0,229,255,0.05) inset,
+        0 1px 0 rgba(255,255,255,0.04) inset,
+        0 0 28px rgba(0,229,255,0.08),
+        0 10px 36px rgba(0,0,0,0.45);
+    transition: transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 0.3s ease, border-color 0.3s ease;
     animation: count-up-glow 1.5s ease 0.2s both;
     position: relative;
     overflow: hidden;
@@ -1825,17 +2002,28 @@ button[kind="primary"]:hover {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0; height: 2px;
-    background: linear-gradient(90deg, #C8102E, #00f0ff, #1D428A, #00ff9d, #C8102E);
+    background: linear-gradient(90deg, #C8102E, #00e5ff, #1D428A, #00ffb7, #C8102E);
     background-size: 200% 100%;
-    animation: headerShimmer 3s ease infinite;
+    animation: auroraShift 5s ease infinite;
+}
+.premium-metric-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%; width: 50%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.02), transparent);
+    pointer-events: none;
+}
+.premium-metric-card:hover::after {
+    animation: cardShineSweep 0.8s ease forwards;
 }
 .premium-metric-card:hover {
-    transform: translateY(-6px) scale(1.012);
-    border-color: rgba(0,240,255,0.38);
+    transform: translateY(-7px) scale(1.008);
+    border-color: rgba(0,229,255,0.28);
     box-shadow:
-        0 0 0 1px rgba(0,240,255,0.10) inset,
-        0 0 36px rgba(0,240,255,0.20),
-        0 12px 40px rgba(0,0,0,0.55);
+        0 0 0 1px rgba(0,229,255,0.10) inset,
+        0 1px 0 rgba(255,255,255,0.05) inset,
+        0 0 45px rgba(0,229,255,0.15),
+        0 14px 48px rgba(0,0,0,0.55);
 }
 
 /* ─── Smart Tooltip ───────────────────────────────────────── */
@@ -2849,6 +3037,534 @@ input:focus, textarea:focus, select:focus,
 }
 </style>
 """
+
+    # ── AI Neural Theme — Player Cards (QEG, Top 3, QAM) ──────────────────
+    _base += """
+<style>
+/* ╔══════════════════════════════════════════════════════════════╗
+   ║  AI NEURAL PLAYER CARD THEME — QEG · TOP 3 · QAM           ║
+   ║  Electric cyan/purple neural aesthetic across all cards     ║
+   ╚══════════════════════════════════════════════════════════════╝ */
+
+/* ── Shared neural keyframes ──────────────────────────────────── */
+@keyframes ai-card-scan {
+    0%   { transform: translateY(-100%); opacity: 0.6; }
+    70%  { opacity: 0.25; }
+    100% { transform: translateY(400%); opacity: 0; }
+}
+@keyframes ai-border-flow {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+@keyframes ai-pulse-cyan {
+    0%, 100% { box-shadow: 0 0 10px rgba(0,240,255,0.10), 0 4px 20px rgba(0,0,0,0.5); }
+    50%       { box-shadow: 0 0 22px rgba(0,240,255,0.22), 0 4px 28px rgba(0,0,0,0.55); }
+}
+@keyframes ai-pulse-purple {
+    0%, 100% { box-shadow: 0 0 10px rgba(200,0,255,0.12), 0 4px 20px rgba(0,0,0,0.5); }
+    50%       { box-shadow: 0 0 22px rgba(200,0,255,0.25), 0 4px 28px rgba(0,0,0,0.55); }
+}
+@keyframes ai-glow-headshot {
+    0%, 100% { box-shadow: 0 0 8px rgba(0,240,255,0.25); }
+    50%       { box-shadow: 0 0 18px rgba(0,240,255,0.45); }
+}
+@keyframes ai-rank-flicker {
+    0%, 90%, 100% { opacity: 1; }
+    92%            { opacity: 0.6; }
+    94%            { opacity: 1; }
+    96%            { opacity: 0.7; }
+}
+@keyframes ai-top-bar {
+    0%   { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   QEG PLAYER CARDS — Electric Neural Override
+   ══════════════════════════════════════════════════════════════ */
+.qeg-card {
+    background: linear-gradient(160deg,
+        rgba(4, 8, 18, 0.97) 0%,
+        rgba(7, 12, 26, 0.95) 50%,
+        rgba(5, 10, 22, 0.97) 100%) !important;
+    border: 1px solid rgba(0, 240, 255, 0.13) !important;
+    border-left: 4px solid #00c8ff !important;
+    box-shadow: 0 2px 18px rgba(0,0,0,0.5), 0 0 1px rgba(0,240,255,0.10) !important;
+    animation: qeg-card-slide-in 0.45s ease both, ai-pulse-cyan 5s ease-in-out 0.5s infinite !important;
+}
+/* Neural circuit grid overlay */
+.qeg-card::before {
+    background:
+        linear-gradient(rgba(0,240,255,0.022) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,240,255,0.022) 1px, transparent 1px) !important;
+    background-size: 28px 28px !important;
+    animation: qeg-grid-scroll 25s linear infinite !important;
+    mask-image: radial-gradient(ellipse at 0% 50%, black 0%, transparent 55%) !important;
+    -webkit-mask-image: radial-gradient(ellipse at 0% 50%, black 0%, transparent 55%) !important;
+}
+/* Scanline sweep */
+.qeg-card::after {
+    content: '' !important;
+    position: absolute !important; top: 0; left: 4px; right: 0; height: 30px !important;
+    background: linear-gradient(180deg,
+        transparent 0%, rgba(0,240,255,0.025) 45%,
+        rgba(0,240,255,0.05) 50%, rgba(0,240,255,0.025) 55%, transparent 100%) !important;
+    animation: ai-card-scan 8s linear 2s infinite !important;
+    pointer-events: none !important;
+}
+.qeg-card:hover {
+    border-color: rgba(0, 240, 255, 0.28) !important;
+    box-shadow: 0 6px 32px rgba(0,0,0,0.6), 0 0 28px rgba(0,240,255,0.12) !important;
+    transform: translateY(-2px) !important;
+}
+
+/* OVER = cyan, UNDER = electric orange-red (keeps neural feel) */
+.qeg-card-over {
+    border-left-color: #00c8ff !important;
+}
+.qeg-card-over::before {
+    background:
+        linear-gradient(rgba(0,240,255,0.022) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,240,255,0.022) 1px, transparent 1px) !important;
+    background-size: 28px 28px !important;
+}
+.qeg-card-under {
+    border-left-color: #ff5e00 !important;
+    background: linear-gradient(160deg,
+        rgba(18, 6, 2, 0.97) 0%,
+        rgba(24, 8, 4, 0.95) 50%,
+        rgba(18, 6, 2, 0.97) 100%) !important;
+    animation: qeg-card-slide-in 0.45s ease both !important;
+}
+.qeg-card-under::before {
+    background:
+        linear-gradient(rgba(255,94,0,0.022) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,94,0,0.022) 1px, transparent 1px) !important;
+    background-size: 28px 28px !important;
+}
+.qeg-card-under::after {
+    background: linear-gradient(180deg,
+        transparent 0%, rgba(255,94,0,0.025) 45%,
+        rgba(255,94,0,0.05) 50%, rgba(255,94,0,0.025) 55%, transparent 100%) !important;
+}
+.qeg-card-under:hover {
+    border-color: rgba(255, 94, 0, 0.30) !important;
+    box-shadow: 0 6px 32px rgba(0,0,0,0.6), 0 0 28px rgba(255,94,0,0.12) !important;
+}
+
+/* Headshots */
+.qeg-headshot {
+    border: 2px solid rgba(0, 240, 255, 0.25) !important;
+    box-shadow: 0 0 10px rgba(0,240,255,0.20) !important;
+    animation: ai-glow-headshot 4s ease-in-out infinite !important;
+    background: linear-gradient(145deg, #060c1a, #040810) !important;
+}
+.qeg-card-under .qeg-headshot {
+    border-color: rgba(255, 94, 0, 0.25) !important;
+    box-shadow: 0 0 10px rgba(255,94,0,0.18) !important;
+    animation: none !important;
+}
+
+/* Rank badge */
+.qeg-rank {
+    background: linear-gradient(145deg, rgba(0,240,255,0.15), rgba(0,200,255,0.06)) !important;
+    border: 1px solid rgba(0,240,255,0.30) !important;
+    color: #00e8ff !important;
+    font-family: 'Orbitron', sans-serif !important;
+    animation: ai-rank-flicker 6s ease-in-out infinite !important;
+    box-shadow: 0 0 10px rgba(0,240,255,0.15) !important;
+}
+.qeg-card-under .qeg-rank {
+    background: linear-gradient(145deg, rgba(255,94,0,0.15), rgba(255,94,0,0.06)) !important;
+    border-color: rgba(255,94,0,0.30) !important;
+    color: #ff8040 !important;
+    box-shadow: 0 0 10px rgba(255,94,0,0.15) !important;
+}
+
+/* Player name & prop */
+.qeg-player-name { color: #c8e8ff !important; }
+.qeg-player-prop { color: #00e0ff !important; }
+.qeg-card-under .qeg-player-prop { color: #ff7040 !important; }
+.qeg-player-meta { color: #4a6880 !important; }
+
+/* Metrics strip */
+.qeg-metric {
+    background: rgba(0, 240, 255, 0.04) !important;
+    border: 1px solid rgba(0, 240, 255, 0.09) !important;
+}
+.qeg-metric:hover {
+    background: rgba(0, 240, 255, 0.08) !important;
+    border-color: rgba(0, 240, 255, 0.20) !important;
+}
+.qeg-metric-val { color: #00d8ff !important; }
+.qeg-metric-lbl { color: #3a6070 !important; }
+
+.qeg-card-under .qeg-metric {
+    background: rgba(255,94,0,0.04) !important;
+    border-color: rgba(255,94,0,0.09) !important;
+}
+.qeg-card-under .qeg-metric-val { color: #ff7040 !important; }
+
+/* Direction badges */
+.qeg-dir-over {
+    background: rgba(0, 240, 255, 0.12) !important;
+    color: #00e0ff !important;
+    border: 1px solid rgba(0, 240, 255, 0.28) !important;
+    box-shadow: 0 0 8px rgba(0,240,255,0.12) !important;
+}
+.qeg-dir-under {
+    background: rgba(255, 94, 0, 0.12) !important;
+    color: #ff7040 !important;
+    border: 1px solid rgba(255, 94, 0, 0.28) !important;
+}
+
+/* Confidence bar */
+.qeg-conf-val { color: #00d8ff !important; }
+.qeg-conf-bar-fill {
+    background: linear-gradient(90deg, #0060a0, #00c8ff) !important;
+    box-shadow: 0 0 6px rgba(0,200,255,0.30) !important;
+}
+.qeg-card-under .qeg-conf-val { color: #ff7040 !important; }
+.qeg-card-under .qeg-conf-bar-fill {
+    background: linear-gradient(90deg, #803010, #ff5e00) !important;
+    box-shadow: none !important;
+}
+
+/* Edge highlight panel */
+.qeg-edge-highlight {
+    background: linear-gradient(145deg, rgba(0,240,255,0.05), rgba(0,200,255,0.10)) !important;
+    border: 1px solid rgba(0, 240, 255, 0.20) !important;
+    animation: ai-pulse-cyan 5s ease-in-out infinite !important;
+}
+.qeg-gauge-ring {
+    stroke: #00c8ff !important;
+    filter: drop-shadow(0 0 5px rgba(0,200,255,0.35)) !important;
+}
+.qeg-gauge-text { fill: #00d8ff !important; }
+.qeg-card-under .qeg-edge-highlight {
+    background: linear-gradient(145deg, rgba(255,94,0,0.05), rgba(255,94,0,0.10)) !important;
+    border-color: rgba(255, 94, 0, 0.20) !important;
+    animation: none !important;
+}
+.qeg-card-under .qeg-gauge-ring {
+    stroke: #ff5e00 !important;
+    filter: none !important;
+}
+.qeg-card-under .qeg-gauge-text { fill: #ff7040 !important; }
+
+/* Group / collapsible container */
+.qeg-group {
+    border-color: rgba(0, 240, 255, 0.10) !important;
+    background: rgba(4, 8, 18, 0.60) !important;
+}
+.qeg-group[open] {
+    border-color: rgba(0, 240, 255, 0.20) !important;
+    box-shadow: 0 2px 20px rgba(0,240,255,0.06) !important;
+}
+.qeg-group-name { color: #b0d8f0 !important; }
+.qeg-group-summary .qeg-headshot { border-color: rgba(0,240,255,0.18) !important; }
+
+/* ══════════════════════════════════════════════════════════════
+   TOP 3 TONIGHT HERO CARDS — Neural Prestige Override
+   ══════════════════════════════════════════════════════════════ */
+.qam-hero-card {
+    background: linear-gradient(145deg,
+        rgba(6, 10, 22, 0.96) 0%,
+        rgba(10, 16, 30, 0.97) 50%,
+        rgba(7, 12, 24, 0.96) 100%) !important;
+    border: 1.5px solid rgba(0, 240, 255, 0.20) !important;
+    box-shadow:
+        0 0 28px rgba(0,240,255,0.09),
+        0 6px 36px rgba(0,0,0,0.55),
+        inset 0 1px 0 rgba(0,240,255,0.06) !important;
+    animation: heroFadeIn 0.5s ease-out both, ai-pulse-cyan 6s ease-in-out 0.8s infinite !important;
+    overflow: hidden !important;
+    position: relative !important;
+}
+/* Animated gradient top bar */
+.qam-hero-card::before {
+    background: linear-gradient(90deg,
+        #c800ff 0%, #00f0ff 25%, #FFD700 50%, #00ff9d 75%, #c800ff 100%) !important;
+    background-size: 300% 100% !important;
+    animation: ai-top-bar 4s linear infinite !important;
+    height: 3px !important;
+    border-radius: 16px 16px 0 0 !important;
+}
+/* Neural circuit grid background */
+.qam-hero-card::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 0; left: 0; right: 0; bottom: 0 !important;
+    background-image:
+        linear-gradient(rgba(0,240,255,0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,240,255,0.018) 1px, transparent 1px) !important;
+    background-size: 30px 30px !important;
+    pointer-events: none !important;
+    mask-image: radial-gradient(ellipse at 50% 100%, black 0%, transparent 55%) !important;
+    -webkit-mask-image: radial-gradient(ellipse at 50% 100%, black 0%, transparent 55%) !important;
+    z-index: 0 !important;
+}
+.qam-hero-card:hover {
+    transform: translateY(-5px) !important;
+    box-shadow:
+        0 0 40px rgba(0,240,255,0.18),
+        0 8px 40px rgba(0,0,0,0.6),
+        inset 0 1px 0 rgba(0,240,255,0.10) !important;
+    border-color: rgba(0, 240, 255, 0.35) !important;
+}
+/* Tier-specific auras */
+.qam-hero-card[data-tier="Platinum"] {
+    border-color: rgba(200, 0, 255, 0.35) !important;
+    animation: heroFadeIn 0.5s ease-out both, ai-pulse-purple 6s ease-in-out 0.8s infinite !important;
+    box-shadow:
+        0 0 30px rgba(200,0,255,0.14),
+        0 6px 36px rgba(0,0,0,0.55),
+        inset 0 1px 0 rgba(200,0,255,0.08) !important;
+}
+.qam-hero-card[data-tier="Gold"] {
+    border-color: rgba(255, 215, 0, 0.28) !important;
+}
+
+/* Player name */
+.qam-hero-name {
+    font-family: 'Orbitron', sans-serif !important;
+    color: #d0ecff !important;
+    text-shadow: 0 0 14px rgba(0,240,255,0.20) !important;
+    position: relative !important; z-index: 1 !important;
+}
+/* Rank watermark */
+.qam-hero-rank {
+    color: rgba(0, 240, 255, 0.12) !important;
+    font-family: 'Orbitron', sans-serif !important;
+}
+/* Team / meta */
+.qam-hero-team {
+    color: #3a6880 !important;
+    position: relative !important; z-index: 1 !important;
+}
+/* Tier badge */
+.qam-hero-tier[data-tier="Platinum"] {
+    background: rgba(200,0,255,0.18) !important;
+    color: #e060ff !important;
+    border: 1px solid rgba(200,0,255,0.40) !important;
+    box-shadow: 0 0 10px rgba(200,0,255,0.20) !important;
+}
+.qam-hero-tier[data-tier="Gold"] {
+    background: rgba(255,215,0,0.14) !important;
+    color: #ffd700 !important;
+    border: 1px solid rgba(255,215,0,0.35) !important;
+    box-shadow: 0 0 8px rgba(255,215,0,0.15) !important;
+}
+.qam-hero-tier[data-tier="Silver"] {
+    background: rgba(0,240,255,0.12) !important;
+    color: #00e8ff !important;
+    border: 1px solid rgba(0,240,255,0.30) !important;
+}
+/* Headshots on top-3 */
+.qam-hero-headshot {
+    border: 3px solid rgba(0,240,255,0.30) !important;
+    box-shadow: 0 0 18px rgba(0,240,255,0.25), 0 4px 12px rgba(0,0,0,0.4) !important;
+    animation: ai-glow-headshot 4s ease-in-out infinite !important;
+    border-radius: 50% !important;
+    position: relative !important; z-index: 1 !important;
+}
+/* Metric values */
+.qam-hero-metric-val {
+    font-family: 'Orbitron', sans-serif !important;
+    text-shadow: 0 0 8px rgba(0,240,255,0.15) !important;
+    position: relative !important; z-index: 1 !important;
+}
+.qam-hero-metric-label {
+    color: #3a5870 !important;
+    position: relative !important; z-index: 1 !important;
+}
+/* Line / direction */
+.qam-hero-line {
+    font-family: 'Orbitron', sans-serif !important;
+    color: #00e0ff !important;
+    text-shadow: 0 0 12px rgba(0,240,255,0.25) !important;
+    position: relative !important; z-index: 1 !important;
+}
+.qam-hero-dir[data-dir="OVER"] {
+    color: #00ff9d !important;
+    text-shadow: 0 0 10px rgba(0,255,157,0.25) !important;
+    position: relative !important; z-index: 1 !important;
+}
+.qam-hero-dir[data-dir="UNDER"] {
+    color: #ff5e00 !important;
+    text-shadow: 0 0 10px rgba(255,94,0,0.20) !important;
+    position: relative !important; z-index: 1 !important;
+}
+.qam-hero-stat {
+    color: #5a90b8 !important;
+    position: relative !important; z-index: 1 !important;
+}
+.qam-hero-body,
+.qam-hero-metrics,
+.qam-hero-top,
+.qam-hero-proj-bar,
+.qam-hero-range,
+.qam-hero-joseph,
+.qam-hero-badges {
+    position: relative !important; z-index: 1 !important;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   QAM PROP CARDS (Game Report + Analysis) — Neural Override
+   ══════════════════════════════════════════════════════════════ */
+.qds-prop-card {
+    background: linear-gradient(145deg,
+        rgba(5, 9, 20, 0.97) 0%,
+        rgba(8, 13, 28, 0.96) 60%,
+        rgba(6, 10, 22, 0.97) 100%) !important;
+    border: 1px solid rgba(0, 240, 255, 0.15) !important;
+    border-top: 3px solid transparent !important;
+    border-image: linear-gradient(90deg, #00f0ff, #c800ff, #FFD700) 1 !important;
+    border-image-slice: 1 !important;
+    box-shadow:
+        0 0 20px rgba(0,240,255,0.07),
+        0 4px 24px rgba(0,0,0,0.55),
+        inset 0 1px 0 rgba(0,240,255,0.05) !important;
+    position: relative !important; overflow: hidden !important;
+    transition: all 0.3s cubic-bezier(0.4,0,0.2,1) !important;
+}
+/* Circuit grid overlay */
+.qds-prop-card::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 0; left: 0; right: 0; bottom: 0 !important;
+    background-image:
+        linear-gradient(rgba(0,240,255,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,240,255,0.015) 1px, transparent 1px) !important;
+    background-size: 30px 30px !important;
+    pointer-events: none !important;
+    mask-image: radial-gradient(ellipse at 100% 0%, black 0%, transparent 50%) !important;
+    -webkit-mask-image: radial-gradient(ellipse at 100% 0%, black 0%, transparent 50%) !important;
+    z-index: 0 !important;
+}
+.qds-prop-card:hover {
+    border-color: rgba(0, 240, 255, 0.28) !important;
+    box-shadow:
+        0 0 30px rgba(0,240,255,0.13),
+        0 6px 30px rgba(0,0,0,0.60) !important;
+    transform: translateY(-2px) !important;
+}
+/* Badge */
+.qds-prop-badge {
+    background: linear-gradient(135deg, #0040a0, #0080c0) !important;
+    color: #00e8ff !important;
+    border: 1px solid rgba(0,240,255,0.35) !important;
+    box-shadow: 0 0 8px rgba(0,200,255,0.20) !important;
+    font-family: 'Orbitron', sans-serif !important;
+    position: relative !important; z-index: 2 !important;
+}
+/* Player name */
+.qds-player-name {
+    color: #c8e4ff !important;
+    position: relative !important; z-index: 1 !important;
+}
+.qds-player-prop {
+    position: relative !important; z-index: 1 !important;
+}
+/* SAFE score block */
+.qds-score-value {
+    background: rgba(0,240,255,0.10) !important;
+    color: #00d8ff !important;
+    border: 1px solid rgba(0,240,255,0.25) !important;
+    box-shadow: 0 0 8px rgba(0,200,255,0.15) !important;
+    position: relative !important; z-index: 1 !important;
+}
+/* Tier badges */
+.qds-tier-diamond {
+    background: rgba(200,0,255,0.14) !important;
+    color: #d060ff !important;
+    border: 1px solid rgba(200,0,255,0.38) !important;
+    box-shadow: 0 0 10px rgba(200,0,255,0.18) !important;
+}
+.qds-tier-lock {
+    background: rgba(255,215,0,0.12) !important;
+    color: #ffd700 !important;
+    border: 1px solid rgba(255,215,0,0.32) !important;
+    box-shadow: 0 0 8px rgba(255,215,0,0.14) !important;
+}
+.qds-tier-check {
+    background: rgba(0,240,255,0.10) !important;
+    color: #00d8ff !important;
+    border: 1px solid rgba(0,240,255,0.28) !important;
+    box-shadow: 0 0 6px rgba(0,200,255,0.12) !important;
+}
+/* Metric items */
+.qds-metric-item {
+    background: rgba(0,240,255,0.03) !important;
+    border: 1px solid rgba(0,240,255,0.09) !important;
+    border-left: 3px solid rgba(0,240,255,0.25) !important;
+    position: relative !important; z-index: 1 !important;
+    transition: all 0.2s ease !important;
+}
+.qds-metric-item:hover {
+    background: rgba(0,240,255,0.06) !important;
+    border-color: rgba(0,240,255,0.20) !important;
+}
+.qds-metric-name { color: #00c8e8 !important; }
+.qds-metric-score {
+    background: rgba(0,240,255,0.10) !important;
+    color: #00d8ff !important;
+    border: 1px solid rgba(0,240,255,0.20) !important;
+}
+/* Confidence bars */
+.qds-conf-fill-high { background: linear-gradient(90deg, #0060a0, #00c8ff) !important; box-shadow: 0 0 6px rgba(0,200,255,0.30) !important; }
+.qds-conf-fill-mid  { background: linear-gradient(90deg, #806000, #ffd700) !important; }
+.qds-conf-fill-low  { background: linear-gradient(90deg, #003880, #0080d0) !important; }
+/* Verdict paragraph */
+.qds-prop-verdict {
+    background: rgba(0,240,255,0.04) !important;
+    border-left: 3px solid rgba(0,240,255,0.30) !important;
+    color: #8ab8cc !important;
+    position: relative !important; z-index: 1 !important;
+}
+/* Player headshot */
+.qds-player-img {
+    border: 3px solid rgba(0,240,255,0.28) !important;
+    box-shadow: 0 0 14px rgba(0,200,255,0.22) !important;
+    background: linear-gradient(145deg, #060c1a, #040810) !important;
+    position: relative !important; z-index: 1 !important;
+}
+.qds-prop-header,
+.qds-safe-score,
+.qds-metrics-grid,
+.qds-bonus-factors,
+.qds-strategy-table,
+.qds-confidence-bars,
+.qds-player-info { position: relative !important; z-index: 1 !important; }
+
+/* Stat badges */
+.qds-stat-badge {
+    background: rgba(0,240,255,0.08) !important;
+    color: #00c8e8 !important;
+    border: 1px solid rgba(0,240,255,0.20) !important;
+}
+</style>
+"""
+
+    # ── Append sidebar CSS to hide tournament pages (16-25) in main app ──
+    _base += (
+        "\n<style>"
+        "\n/* Hide tournament nav items (pages 16-25) by default */"
+        "\n[data-testid='stSidebarNav'] li:has(a[href^='/16_']),"
+        "\n[data-testid='stSidebarNav'] li:has(a[href^='/17_']),"
+        "\n[data-testid='stSidebarNav'] li:has(a[href^='/18_']),"
+        "\n[data-testid='stSidebarNav'] li:has(a[href^='/19_']),"
+        "\n[data-testid='stSidebarNav'] li:has(a[href^='/20_']),"
+        "\n[data-testid='stSidebarNav'] li:has(a[href^='/21_']),"
+        "\n[data-testid='stSidebarNav'] li:has(a[href^='/22_']),"
+        "\n[data-testid='stSidebarNav'] li:has(a[href^='/23_']),"
+        "\n[data-testid='stSidebarNav'] li:has(a[href^='/24_']),"
+        "\n[data-testid='stSidebarNav'] li:has(a[href^='/25_'])"
+        "\n{display:none!important}"
+        "\n</style>"
+    )
+    return _base
 
 
 # ============================================================
@@ -4076,6 +4792,7 @@ h1,h2,h3,h4{font-family:'Orbitron',sans-serif;letter-spacing:0.5px;font-weight:7
   .qds-bonus-item{font-size:0.75rem!important;}
 }
 </style>"""
+
 
 # ── Static JS for QDS report ────────────────────────────────────────────────
 _QDS_REPORT_JS = """
