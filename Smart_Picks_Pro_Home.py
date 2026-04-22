@@ -18,6 +18,17 @@ from pathlib import Path
 # ============================================================
 def _home_callable():
     """Render the Smart Pick Pro home / landing page."""
+    # ── Auth gate: send unauthenticated visitors to /login ────────
+    import os as _os
+    if _os.environ.get("SMARTAI_PRODUCTION", "").lower() in ("true", "1", "yes"):
+        try:
+            from utils.auth import is_premium_user as _ipu
+            if not _ipu():
+                st.switch_page("pages/login.py")
+                return
+        except Exception:
+            pass  # Fail open — don't block the page if auth module errors
+    # ─────────────────────────────────────────────────────────────
     from data.data_manager import load_players_data, load_props_data, load_teams_data
     from data.nba_data_service import load_last_updated
     from tracking.database import initialize_database, load_user_settings, load_page_state
@@ -2540,9 +2551,15 @@ def _make_pages():
          if not p.name.startswith((".", "_")) and p.name != "__init__.py"],
         key=lambda p: p.name,
     )
+    # Pages that are always hidden from the sidebar nav (auth/utility pages)
+    _HIDDEN_PAGES = {"login.py"}
+
     result = [st.Page(_home_callable, title="Smart Pick Pro", icon="\U0001f3c0", default=True,
                       visibility="hidden" if _tournament_on else "visible")]
     for p in _all:
+        if p.name in _HIDDEN_PAGES:
+            result.append(st.Page(str(p), visibility="hidden"))
+            continue
         _is_t = any(p.name.startswith(f"{n}_") for n in _TOURNAMENT_NUMS)
         vis = ("visible" if _is_t else "hidden") if _tournament_on else ("hidden" if _is_t else "visible")
         result.append(st.Page(str(p), visibility=vis))
